@@ -1,0 +1,198 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(corrr)
+library(janitor)
+library(tidyverse)
+library(infer)
+library(janitor)
+library(lubridate)
+library(tsibble)
+```
+
+
+
+```{r}
+team_data <- read_csv("5_clean_data/team_data.csv",
+  col_types =
+    cols(
+      season = "c"
+    )
+)
+
+international <- team_data %>% 
+  filter(competition == "rugby_world_cup" | competition == "internationals") %>% 
+  distinct(team) %>% 
+  pull
+
+
+international_matches <- team_data %>% 
+  filter(team %in% international)
+```
+
+```{r}
+
+
+matches <- team_data %>%
+  filter(stat == "points_scored" | stat == "kicks_from_hand") %>%
+  pivot_wider(names_from = stat, values_from = values) %>%
+  group_by(date, match) %>%
+  mutate(
+    total_scored = sum(points_scored),
+    total_kick = sum(kicks_from_hand)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    opposition_points = total_scored - points_scored,
+    opposition_kicks = total_kick - kicks_from_hand
+  ) %>%
+  select(-total_scored, -total_kick) %>%
+  mutate(
+    result = case_when(
+      points_scored > opposition_points ~ "won",
+      points_scored < opposition_points ~ "lost",
+      points_scored == opposition_points ~ "draw"
+    ),
+    kicks = case_when(
+      kicks_from_hand > opposition_kicks ~ "more",
+      kicks_from_hand < opposition_kicks ~ "less",
+      kicks_from_hand == opposition_kicks ~ "same"
+    )
+  ) %>% 
+  mutate(kicks = factor(kicks, levels  = c("more", "less", "same")))
+
+
+match_winners <- matches %>% 
+  filter(result == "won")
+
+match_losers <- matches %>% 
+  filter(result == "lost")
+
+```
+
+
+```{r}
+match_winners %>% 
+  ggplot() + 
+  aes(x = kicks) + 
+  geom_bar()
+
+
+
+```
+The winning teams kick more than their opposition.
+
+
+```{r}
+match_winners %>% 
+  filter(kicks != "same") %>% 
+  tabyl(kicks, result) %>% 
+  adorn_percentages(denominator = "all")
+
+
+```
+```{r}
+observed_stat <- match_winners %>% 
+  filter(kicks != "same") %>% 
+  specify(response = kicks, success = "more") %>% 
+  calculate(stat = "prop")
+
+observed_stat
+```
+
+```{r}
+null_distribution <- match_winners %>%
+  filter(kicks != "same") %>% 
+ specify(response = kicks, success = "more")%>% 
+  hypothesize(null = "point", p = 0.70) %>%
+  generate(reps = 5000, type = "simulate") %>%
+  calculate(stat = "prop")
+```
+
+
+```{r}
+null_distribution %>%
+  visualise(bins = 30)
+```
+```{r}
+null_distribution %>%
+  visualise(bins = 30) + #remembering that it is a '+' here not '%>%' because using ggplot functionality to visualise
+  shade_p_value(obs_stat = observed_stat, direction = "both") #it is a two-sided test as the alternative is whether the proportion is different in either left or left direction
+
+p_value <- null_distribution %>%
+  get_p_value(obs_stat = observed_stat, direction = "both")
+
+p_value
+```
+```{r}
+matches %>% 
+  filter(team %in% international) %>% 
+  ggplot() + 
+  aes(x = kicks_from_hand, y = points_scored) %>% 
+  geom_point()
+```
+```{r}
+matches %>% 
+  filter(kicks_from_hand > 45)
+```
+```{r}
+matches %>% 
+  group_by(match, date) %>% 
+  summarise(avg_no_kicks = mean(kicks_from_hand)) %>% 
+ungroup() %>% 
+  summarise(mean(avg_no_kicks))
+```
+
+```{r}
+player_data <- read_csv("5_clean_data/player_data.csv",
+  col_types =
+    cols(
+      season = "c"
+    )
+)
+```
+
+```{r}
+player_data %>% 
+  filter(stat == "kicks_from_hand") %>% 
+  group_by(position) %>% 
+  summarise(avg_kick_from_hand = mean(values)) %>% 
+  ungroup() 
+```
+```{r}
+player_data %>% 
+  filter(stat == "points_scored") %>% 
+  group_by(player) %>% 
+  summarise(total_points = sum(values))  %>% 
+  slice_max(total_points, n = 10)
+```
+
+```{r}
+test <- player_data %>% 
+  mutate(row = row_number()) %>% 
+filter(row %in% which(duplicated(player_data)))
+ 
+```
+
+```{r}
+test %>% 
+
+
+```
+
+```{r}
+player_data %>% 
+  duplicates()
+
+```
+
+```{r}
+player_data %>% 
+  filter(stat == "kicks_from_hand") %>% 
+  ggplot() + 
+  geom_point(aes(x = date, y = values))
+```
+

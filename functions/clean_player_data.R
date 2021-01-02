@@ -10,13 +10,14 @@ clean_player_data <- function() {
   complete_data <- NULL
 
   for (file in files) {
-    part_data <- read_csv(file)
+    part_data <- read_csv(file) %>%      distinct(player, .keep_all = TRUE) 
+    
 
     names <- part_data %>%
       select(-competition:-player) %>%
       colnames()
 
-    part_data <- part_data %>%
+    part_data <- part_data %>% 
       pivot_longer(names, names_to = "stat", values_to = "values") %>%
       mutate(season = as.character(season)) %>%
       mutate(stat = recode(stat,
