@@ -1,6 +1,6 @@
 clean_player_data <- function() {
-  files <- c()
 
+files <- c()
 
   for (file in list.files("3_raw_data/player_data/")) {
     file_path <- paste("3_raw_data/player_data/", file, sep = "")
@@ -10,7 +10,8 @@ clean_player_data <- function() {
   complete_data <- NULL
 
   for (file in files) {
-    part_data <- read_csv(file) %>%      distinct(player, .keep_all = TRUE) 
+    part_data <- read_csv(file) %>%      
+      distinct(player, .keep_all = TRUE) 
     
 
     names <- part_data %>%

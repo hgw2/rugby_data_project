@@ -122,15 +122,16 @@ Since the teams that kick the most is an ambiguous term I am to first focus on s
 ### Match Winners
 
 ```{r}
-match_winners %>%
+matches %>% 
+  filter(kicks == "more") %>% 
   mutate(kicks = str_to_title(kicks)) %>%
   ggplot() +
-  aes(x = kicks, y = ..prop.., group = result) +
+  aes(x = result, y = ..prop.., group = kicks) +
   geom_bar(stat = "count") +
   facet_wrap(~type_of_team)
 ```
 
-When looking at the winners of the matches, in both club and international matchsthe winning team had kicked more than their opposition over 67% of the time. Suggesting that if a team kicks more than their opposition then they are more likely to win the match. Of course, this does not suggest that kicking more than the opposition is a match winning formula. So we are going to explore whether teams that kick more than their opposition regularly win more of their matches.
+When looking at the winners of the matches, in both club and international matches the team that kicked more than their opposition  won 67% of the time. Suggesting that if a team kicks more than their opposition then they are more likely to win the match. Of course, this does not suggest that kicking more than the opposition is a match winning formula. So we are going to explore whether teams that kick more than their opposition regularly win more of their matches.
 
 To do this I calculated the win percentage of the games played and the percentage of times they kicked more than their opposition. 
 
@@ -206,7 +207,7 @@ team_rates %>%
   ggplot() +
   aes(x = kick_rate, y = win_rate) +
   geom_point() +
-  geom_smooth(method = lm) 
+  geom_smooth(method = "lm", formula  = y ~ poly(x,6)) 
 
 cor(team_rates$kick_rate, team_rates$win_rate)
 ```
@@ -267,47 +268,20 @@ If we the look at the correlation we can see that there is even less of a correl
 
 
 ```{r}
-matches %>%
-  filter(type_of_team == "international") %>% 
-  ggplot() +
-  aes(x = kicks_from_hand, y = points_scored) +
-  geom_point() +
-  geom_smooth(method = lm) 
-
-correlate()
-```
-```{r}
-matches %>%
-  filter(kicks_from_hand > 45)
-```
-```{r}
-matches %>%
-  group_by(match, date) %>%
-  summarise(avg_no_kicks = mean(kicks_from_hand)) %>%
-  ungroup() %>%
-  summarise(mean(avg_no_kicks))
+team_data %>%
+  pivot_wider(names_from = stat, values_from = values) %>% 
+  rowwise %>% 
+  mutate(penalty_kick_attempts = penalty_goal_successful + penalty_missed) %>% 
+  select(-competition:-team) %>% 
+  correlate() %>% 
+  focus(kicks_from_hand) %>% 
+  ggplot()+
+  aes(x = reorder(term, kicks_from_hand), y = kicks_from_hand, fill = kicks_from_hand > 0) +
+  geom_col() +
+  coord_flip()
 ```
 
-```{r}
-player_data <- read_csv("5_clean_data/player_data.csv",
-  col_types =
-    cols(
-      season = "c"
-    )
-)
-```
 
-```{r}
-player_data %>%
-  filter(stat == "kicks_from_hand") %>%
-  group_by(position) %>%
-  summarise(avg_kick_from_hand = mean(values)) %>%
-  ungroup()
-```
-```{r}
-player_data %>%
-  filter(stat == "points_scored") %>%
-  group_by(player) %>%
-  summarise(total_points = sum(values)) %>%
-  slice_max(total_points, n = 10)
-```
+
+
+
