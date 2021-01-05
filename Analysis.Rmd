@@ -92,13 +92,10 @@ matches <- team_data %>%
       points_scored < opposition_points ~ "lost",
       points_scored == opposition_points ~ "draw"
     ),
-    kicks = case_when(
-      kicks_from_hand > opposition_kicks ~ "more",
-      kicks_from_hand < opposition_kicks ~ "less",
-      kicks_from_hand == opposition_kicks ~ "same"
-    )
-  ) %>%
-  mutate(kicks = factor(kicks, levels = c("more", "less", "same"))) %>% 
+    kicks =ifelse(kicks_from_hand > opposition_kicks, "more", "not_more")
+
+    
+  ) %>% 
   mutate(type_of_team = if_else(team %in% international, "international", "club"))
 
 type_of_team <- matches %>% 
@@ -127,11 +124,55 @@ matches %>%
   mutate(kicks = str_to_title(kicks)) %>%
   ggplot() +
   aes(x = result, y = ..prop.., group = kicks) +
-  geom_bar(stat = "count") +
-  facet_wrap(~type_of_team)
+  geom_bar(stat = "count") 
 ```
 
-When looking at the winners of the matches, in both club and international matches the team that kicked more than their opposition  won 67% of the time. Suggesting that if a team kicks more than their opposition then they are more likely to win the match. Of course, this does not suggest that kicking more than the opposition is a match winning formula. So we are going to explore whether teams that kick more than their opposition regularly win more of their matches.
+When looking at the winners of the matches, in both club and international matches the team that kicked more than their opposition  won 67% of the time. Suggesting that if a team kicks more than their opposition then they are more likely to win the match. Of course, this does not suggest that kicking more than the opposition is a match winning formula. So we are going to explore whether teams that kick more than their opposition regularly win more of their matches. Lets heck to see if that is the case.
+
+
+## Hypothesis test
+Using this data lets put that to the test if the claim is statistically significant. If kicking did not have an impact on matches you would expect the proportion to be around 50% 
+
+H0 = πmatches_won = 0.5
+Ha - πmatches_won > 0.5
+
+æ = 0.05
+
+```{r}
+test_matches <- matches %>% 
+  mutate(won = result == "won") %>% 
+  filter(kicks == "more")
+
+
+```
+
+
+```{r}
+null_distribution <- test_matches %>%
+  specify(response = won, success = "TRUE") %>% 
+  hypothesize(null = "point", p = 0.5) %>%
+  generate(reps = 10000, type = "simulate") %>%
+  calculate(stat = "prop")
+
+observed_stat <- test_matches %>%
+  specify(response = won, success = "TRUE") %>% 
+  calculate(stat = "prop")
+
+
+```
+
+```{r}
+null_distribution %>%
+  visualise(bins = 30) + #remembering that it is a '+' here not '%>%' because using ggplot functionality to visualise
+  shade_p_value(obs_stat = observed_stat, direction = "right")
+
+p_value <- null_distribution %>%
+  get_p_value(obs_stat = observed_stat, direction = "both")
+
+p_value
+```
+The p-value is less than α we reject H0 in favour of Ha. We found enough evidence from our matches to suggest that the proportion of wins is statistically significantly greater than the null value. This means that statsically teams that kick more than their opposition win more games.
+
 
 To do this I calculated the win percentage of the games played and the percentage of times they kicked more than their opposition. 
 
@@ -160,7 +201,7 @@ team_kicks <- matches %>%
   mutate_if(is.numeric, ~ coalesce(.x, 0)) %>%
   rowwise() %>%
   mutate(
-    no_matches = sum(more, less, same),
+    no_matches = sum(more, not_more),
     kick_rate = more / no_matches
   ) %>%
   arrange(desc(kick_rate))
