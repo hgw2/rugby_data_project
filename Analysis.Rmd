@@ -1,328 +1,158 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-# “The teams that kick the most win games”
-
-## Introduction
-
-Following Englands victory against Ireland in November 2020, Eddie Jones was quoted “The teams that kick the most win games”.^[https://www.macclesfieldrufc.co.uk/2020/12/what-should-our-game-look-like-in-2021/] Even as early as 2010, the then Wales kicking coach can be quoted saying the same thing.^[https://www.theguardian.com/sport/2010/feb/01/wales-lee-byrne-six-nations-ban]. This analysis will examine those claims and see if there is any truth that teams that kick the most win the most.
-
-### Packages 
-```{r}
-library(corrr)
-library(janitor)
-library(tidyverse)
-library(infer)
-library(janitor)
-library(lubridate)
-library(tsibble)
-library(rvest)
-```
 
 
-### Data
-```{r}
-# source("1_get_data/")
 
-length(list.files("3_raw_data/team_data/"))
-
-
-international <- c(
-  "australia", "new_zealand", "england", "south_africa", "ireland", "italy",
-  "japan", "scotland", "wales", "france", "argentina", "georgia",
-  "fiji", "romania", "usa", "tonga", "russia", "namibia",
-  "samoa", "uruguay", "canada"
-)
-
-
-```
-
-Data has been sourced from the Rugby Pass website. At time of writing this includes a total 412 professional Rugby matches from around the world over the last 2 years. This includes both international and club rugby games from the following competitions.
-
-|Compitition| Type| Hemishpere
-|-----------|:------- |:-------
-Autumn Nations Cup | International |	Northern 
-Currie Cup | Club	|	Southern		
-European Champions Cup	|Club |			Northern
-Internationals| International	 | Mixed			
-Mitre 10 Cup |	 Club | Southern			
-Premiership	| Club | Northern			
-Premiership Cup | Club | Northern			
-Pro 14 | Club	| Northern			
-Rugby World Cup | International | Mixed				
-Six Nations |International | Northern
-Super Rugby | Club | Southern 				
-Super Rugby Aotearoa	| Club | Southern 					
-Super Rugby Australia		| Club | Southern 				
-Super Rugby Unlocked| Club | Southern 						
-The Rugby Championship| International | Southern 		
-
+Lets build a model to see if there is more that can be explained the number of pnealty goal attempts.
 
 ```{r}
-team_data <- read_csv("5_clean_data/team_data.csv",
-  col_types =
-    cols(
-      season = "c"
-    )
-)
-```
 
-Since we are focusing in kicking we need to select the points scored and number of kicks from hand. I have created columns and flagged each column to show the result of the match and flag which team had kicked the most. I have also created a column with the difference in the number of kicks .
-```{r}
-matches <- team_data %>%
-  filter(stat == "points_scored" | stat == "kicks_from_hand") %>%
-  pivot_wider(names_from = stat, values_from = values) %>%
-  group_by(date, match) %>%
-  mutate(
-    total_scored = sum(points_scored),
-    total_kick = sum(kicks_from_hand)
-  ) %>%
-  ungroup() %>%
-  mutate(
-    opposition_points = total_scored - points_scored,
-    opposition_kicks = total_kick - kicks_from_hand
-  ) %>%
-  select(-total_scored, -total_kick) %>%
-  mutate(kick_diff = kicks_from_hand - opposition_kicks) %>%
-  mutate(
-    result = case_when(
-      points_scored > opposition_points ~ "won",
-      points_scored < opposition_points ~ "lost",
-      points_scored == opposition_points ~ "draw"
-    ),
-    kicks =ifelse(kicks_from_hand > opposition_kicks, "more", "not_more")
+major <- data %>% 
+ filter(competition %in% c("six_nations", "the_rugby_championship")) %>% 
+  distinct(team) %>% 
+  pull()
 
-    
-  ) %>% 
-  mutate(type_of_team = if_else(team %in% international, "international", "club"))
-
-type_of_team <- matches %>% 
-  select(team, type_of_team) %>% 
-  distinct(team, .keep_all = TRUE)
-
-match_winners <- matches %>%
-  filter(result == "won")
-
-match_losers <- matches %>%
-  filter(result == "lost")
-```
-
-# Analysis
-
-## Team that kicks more than the opposition
-
-Since the teams that kick the most is an ambiguous term I am to first focus on seeing if it is the case that the team that kicks more than their opposition wins the match
-
-
-### Match Winners
-
-```{r}
-matches %>% 
-  filter(kicks == "more") %>% 
-  mutate(kicks = str_to_title(kicks)) %>%
-  ggplot() +
-  aes(x = result, y = ..prop.., group = kicks) +
-  geom_bar(stat = "count") 
-```
-
-When looking at the winners of the matches, in both club and international matches the team that kicked more than their opposition  won 67% of the time. Suggesting that if a team kicks more than their opposition then they are more likely to win the match. Of course, this does not suggest that kicking more than the opposition is a match winning formula. So we are going to explore whether teams that kick more than their opposition regularly win more of their matches. Lets heck to see if that is the case.
-
-
-## Hypothesis test
-Using this data lets put that to the test if the claim is statistically significant. If kicking did not have an impact on matches you would expect the proportion to be around 50% 
-
-H0 = πmatches_won = 0.5
-Ha - πmatches_won > 0.5
-
-æ = 0.05
-
-```{r}
-test_matches <- matches %>% 
-  mutate(won = result == "won") %>% 
-  filter(kicks == "more")
+model_data <- data %>%
+  mutate(team = if_else(!team %in% major, "minor_nation", team)) %>% 
+  select(-competition, -date,  -lineout_throw_won_clean ,- type_of_team, - match, -penalty_goal_attempts, -try_assist, -red_card, -yellow_card, - hemisphere) %>% 
+  mutate(across(where(is_character), ~ as_factor(.))) %>% 
+  mutate(year= as.factor(year))  
 
 
 ```
 
 
 ```{r}
-null_distribution <- test_matches %>%
-  specify(response = won, success = "TRUE") %>% 
-  hypothesize(null = "point", p = 0.5) %>%
-  generate(reps = 10000, type = "simulate") %>%
-  calculate(stat = "prop")
-
-observed_stat <- test_matches %>%
-  specify(response = won, success = "TRUE") %>% 
-  calculate(stat = "prop")
-
-
+summary(model_data)
 ```
+
 
 ```{r}
-null_distribution %>%
-  visualise(bins = 30) + #remembering that it is a '+' here not '%>%' because using ggplot functionality to visualise
-  shade_p_value(obs_stat = observed_stat, direction = "right")
-
-p_value <- null_distribution %>%
-  get_p_value(obs_stat = observed_stat, direction = "both")
-
-p_value
+alias(lm(kicks_from_hand ~ ., data = model_data))
 ```
-The p-value is less than α we reject H0 in favour of Ha. We found enough evidence from our matches to suggest that the proportion of wins is statistically significantly greater than the null value. This means that statsically teams that kick more than their opposition win more games.
+
+There are no alias in the data so we can check for correlation
 
 
-To do this I calculated the win percentage of the games played and the percentage of times they kicked more than their opposition. 
 
-### Win Rate vs. Kick Rate
-
-The win rate in this case is the percentage number of wins out their total number of matches.
-Kick rate is the percentage number of times a team kicked more than their opposition over their total number of matches. 
-```{r}
-team_results <- matches %>%
-  group_by(team, result) %>%
-  summarise(count = n()) %>%
-  ungroup() %>%
-  pivot_wider(names_from = result, values_from = count) %>%
-  mutate_if(is.numeric, ~ coalesce(.x, 0)) %>%
-  rowwise() %>%
-  mutate(
-    no_matches = sum(draw, lost, won),
-    win_rate = won / no_matches
-  )
-
-team_kicks <- matches %>%
-  group_by(team, kicks) %>%
-  summarise(count = n()) %>%
-  ungroup() %>%
-  pivot_wider(names_from = kicks, values_from = count) %>%
-  mutate_if(is.numeric, ~ coalesce(.x, 0)) %>%
-  rowwise() %>%
-  mutate(
-    no_matches = sum(more, not_more),
-    kick_rate = more / no_matches
-  ) %>%
-  arrange(desc(kick_rate))
-```
 
 
 
 
 ```{r}
-team_rates <- team_results %>%
-  left_join(team_kicks) %>%
-  arrange(desc(kick_rate, win_rate))
+numeric <- model_data %>% 
+  select(is.numeric)
+nonnumeric <- model_data %>% 
+  select(kicks_from_hand, !is.numeric)
 ```
 
-### Top Ten teams with highest kick rate
+
+
+
+```{r message=FALSE, warning=FALSE}
+ggpairs(nonnumeric)
+```
+
+
+`
+team:lineout_won_own_throw
 
 ```{r}
-team_rates %>%
-  filter(no_matches > 5) %>%
-  ungroup() %>%
-  mutate(rank = rank(-kick_rate, ties.method = "first"), .before = team) %>%
-  slice_max(kick_rate, n = 10, with_ties = F) %>%
-  select(-no_matches)
+mod5b <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + total_turnovers_gained + team:lineout_won_own_throw, data = model_data)
+
+summary(mod5b)
 ```
-From this table we can see that these teams kick over 65% more times than their opposition, yet these teams also have mixed win rates 
 
-### Top 10 teams with highest kick rate
-```{r}
-team_rates %>%
-  left_join(type_of_team) %>% 
-  filter(no_matches > 5) %>%
-  ungroup() %>%
-  mutate(rank = rank(-win_rate, ties.method = "first"), .before = team) %>%
-  slice_max(win_rate, n = 10, with_ties = F) %>%
-  select(-no_matches)
-```
-On the flip side the teams that have the higher win rates have mixed kick rates. Only Ulster appear in the top 10 both times. This also suggest that kicking more than the opposition does not mean that teams that kick more win games
-
-### Correlation 
-
+team:total_turnovers_gained
 
 ```{r}
-team_rates %>%
-  ggplot() +
-  aes(x = kick_rate, y = win_rate) +
-  geom_point() +
-  geom_smooth(method = "lm", formula  = y ~ poly(x,6)) 
+mod5b <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + total_turnovers_gained + team:total_turnovers_gained, data = model_data)
 
-cor(team_rates$kick_rate, team_rates$win_rate)
-```
-If we plot the two variables together there is no only a slight correlation of 0.2
-
-## Win rate vs Average number of kicks per game 
-
-Teams that kick more than their opposition do not necessarily win more matches. There may be a higher chance they win the match but not significantly. Lets look at the average number of kicks per game. 
-
-
-## Top 10 teams by win rate
-```{r}
-avg_kicks <- matches %>%
-  group_by(team) %>%
-  summarise(avg_no_kicks_per_game = mean(kicks_from_hand))
-
-team_kicks <- team_results %>%
-  left_join(avg_kicks)
-
-team_kicks %>%
-  filter(no_matches > 5) %>%
-  ungroup() %>%
-  mutate(rank = rank(-win_rate, ties.method = "first"), .before = team) %>%
-  slice_max(win_rate, n = 10, with_ties = F) %>%
-  select(-no_matches)
-```
-
-Comparing the top 10 teams with their average number of kicks per game, there is a range between 18- 30. Again there is no clear order.
-```{r}
-team_kicks %>%
-  filter(no_matches > 5) %>%
-  ungroup() %>%
-  mutate(rank = rank(-avg_no_kicks_per_game, ties.method = "first"), .before = team) %>%
-  slice_max(avg_no_kicks_per_game, n = 10, with_ties = F) %>%
-  select(-no_matches)
-```
-Looking at the top 10 teams offers a much more interesting insight. Again there is no real pattern to the win rate and the average number of kicks per game suggesting that there is more than just kicking for a team to be successful. Interestingly of the top 10, 5 of the teams are international teams showing how kicking is more prevalent in the international game. If we drill down further we can see that this is the case for all matches.
-
-```{r}
-matches %>% 
-  group_by(type_of_team) %>%  
-  summarise(avg_no_kicks_per_games = mean(kicks_from_hand))
 ```
 
 
-```{r}
-team_kicks %>%
-  ggplot() +
-  aes(x = avg_no_kicks_per_game, y = win_rate) +
-  geom_point() +
-  geom_smooth(method = lm)
+penalty_goal_successful:lineout_won_own_throw
 
-correlate(team_kicks$avg_no_kicks_per_game, team_kicks$win_rate)
-```
 
-If we the look at the correlation we can see that there is even less of a correlation between the average number of kicks and win rate.
+
+penalty_goal_successful:total_turnovers_gained
+
+lineout_won_own_throw:total_turnovers_gained
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 ```{r}
-team_data %>%
-  pivot_wider(names_from = stat, values_from = values) %>% 
-  rowwise %>% 
-  mutate(penalty_kick_attempts = penalty_goal_successful + penalty_missed) %>% 
-  select(-competition:-team) %>% 
-  correlate() %>% 
-  focus(kicks_from_hand) %>% 
-  ggplot()+
-  aes(x = reorder(term, kicks_from_hand), y = kicks_from_hand, fill = kicks_from_hand > 0) +
-  geom_col() +
-  coord_flip()
+mod1a <- lm(penalty_goal_attempts ~ try_scored, data = model_data)
+
+autoplot(mod1a)
+
+summary(mod1a)
+```
+
+```{r}
+mod1b <- lm(penalty_goal_attempts ~ kicks_from_hand, data = model_data)
+
+autoplot(mod1b)
+
+summary(mod1b)
+```
+
+```{r}
+mod1c <- lm(penalty_goal_attempts ~ type_of_team, data = model_data)
+
+autoplot(mod1c)
+
+summary(mod1c)
 ```
 
 
+mod1a 
 
 
+
+
+
+```{r}
+mod2a <- lm(penalty_goal_attempts ~ try_scored + points_scored, data = model_data)
+
+autoplot(mod2a)
+
+summary(mod2a)
+
+```
+
+```{r}
+mod2b <- lm(penalty_goal_attempts ~ try_scored + kicks_from_hand,  data = model_data)
+
+autoplot(mod2b)
+
+summary(mod2b)
+```
+mod2a 
+
+
+```{r}
+mod3a <- lm(penalty_goal_attempts ~ try_scored + points_scored + conversion_missed, data = model_data)
+```
+
+```{r}
+autoplot(mod3a)
+
+summary(mod3a)
+```
+
+```{r}
+
+```
 
