@@ -1,4 +1,8 @@
-
+library(miceadds)
+library(rvest)
+library(lubridate)
+library(tidyverse)
+source.all("functions")
 
 links <- c()
 # autumn nations
@@ -121,8 +125,34 @@ world_cup <- "https://www.rugbypass.com/rugby-world-cup/matches/"
 world_cup <- get_match_links(world_cup)
 
 links <- c(links, world_cup)
+
+# top 14
+top_14 <- "https://www.rugbypass.com/top-14/matches/"
+
+top_14 <- get_match_links(top_14)
+
+links <- c(links, top_14)
   
 links <- unique(links)
 
+full_links <- tibble(
+  link = links
+) %>% 
+  mutate(date =  dmy(str_extract(link, "[0-9]{8}"))) %>% 
+  filter(date < Sys.Date()) %>% # remove future dates 
+  pull(link)
+
+if(file.exists("2_scrape_data/old_links.RData")){
+  load("2_scrape_data/old_links.RData")
+ 
+  links <- setdiff(full_links, old_links)
+  
+} else{
+  links <- full_links
+  
+}
 scrape_rugby_pass_data1(links)
 
+ old_links <- full_links
+ 
+  save(old_links, file = "2_scrape_data/old_links.RData")

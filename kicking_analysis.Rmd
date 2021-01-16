@@ -3,11 +3,14 @@ title: "The Team That Kicks More Wins More"
 author: "Harry Williams"
 date: "08/01/2021"
 output: 
+  
   html_document: 
     theme: journal
     toc: yes
     toc_float: yes
-  
+    number_sections: yes
+    df_print: kable
+    mainfont: Calibri Light
 ---
 
 ```{r setup, include=FALSE}
@@ -16,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-During the Autumn Nations Cup in November 2020, Eddie Jones was questioned on his teams decision to kick the ball more in matches. His answer that he gave in a press was that “The teams that kick the most win games”.^[https://www.macclesfieldrufc.co.uk/2020/12/what-should-our-game-look-like-in-2021/] Even as early as 2010, the then Wales kicking coach, Neil Jenkins, can be quoted saying the same thing.^[https://www.theguardian.com/sport/2010/feb/01/wales-lee-byrne-six-nations-ban] This analysis will examine those claims and see if there is any evidence to suggest that teams that kick the most ar more likely to win. It will also explore any possible explanations for why this may be the case.  
+During the Autumn Nations Cup in November 2020, Eddie Jones was questioned on his team's decision to kick the ball more in matches. He answered:“The teams that kick the most win games”.^[https://www.macclesfieldrufc.co.uk/2020/12/what-should-our-game-look-like-in-2021/] This report will examine match data from the last three years and showcase the evidence and possible explanations behind the correlation between kicking frequency and win rate.
 
 ```{r Load Packages, message=FALSE, warning=FALSE, include=FALSE}
 library(corrr)
@@ -33,14 +36,15 @@ library(modelr)
 library(knitr)
 library(kableExtra)
 library(extrafont)
+library(showtext)
 ```
 
 
-## Data
+## The Data 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-# source("1_get_data/")
+ #source("1_get_data/get_data.R")
 
-length(list.files("3_raw_data/team_data/"))
+number_matches <- length(list.files("3_raw_data/team_data/"))
 
 
 international <- c(
@@ -51,8 +55,12 @@ international <- c(
 )
 
 
+font_add_google(name = "Amatic SC", family = "amatic-sc")
 
+# turn on showtext
+showtext_auto(F)
 ```
+
 
 ```{r Load Data, message=FALSE, warning=FALSE, include=FALSE}
 team_data <- read_csv("5_clean_data/team_data.csv",
@@ -65,7 +73,7 @@ team_data <- read_csv("5_clean_data/team_data.csv",
   select(-season) %>% 
   mutate(type_of_team = if_else(team %in% international, "international", "club"), .after = team) %>% 
   mutate(hemisphere = case_when(
-    competition %in% c("autumn_nations_cup", "european_champions_cup", "premiership", "premiership_cup", "pro_14", "six_nations") ~ "northern",
+    competition %in% c("autumn_nations_cup", "european_champions_cup", "premiership", "premiership_cup", "pro_14", "six_nations", "top_14") ~ "northern",
     competition%in% c("internationals", "rugby_world_cup") ~ "mixed",
     TRUE ~ "southern"), .after = competition
   )
@@ -112,7 +120,7 @@ matches <- team_data %>%
 
 ### Competitions
 
-Data has been sourced from the Rugby Pass website.^[https://www.rugbypass.com/] At time of writing this includes a total 420 professional Rugby matches from around the world over the last 3 years. This includes both international and club rugby games from the following competitions:
+Data has been sourced from the Rugby Pass website.^[https://www.rugbypass.com/] At time of writing this includes a total of `r number_matches` professional global Rugby matches over the last 3 years. This includes both international and club rugby games from the following competitions:
 
 ```{r Create Competetion Table, echo=FALSE, message=FALSE, warning=FALSE}
 team_data %>% 
@@ -124,12 +132,12 @@ team_data %>%
  rename_all( ~ str_replace_all(., "_", " ")) %>% 
     rename_all( ~ str_to_title(.))   %>% 
  kbl() %>%
-  kable_classic(full_width = T, html_font = "Book Antiqua" )
+  kable_classic(full_width = T, html_font = "Georgia" )
 ```
 
 ### Variables
 
-The Variables collected from each match are as follows:
+The variables collected from each match are as follows:
 
 ```{r Creat stats table, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -176,19 +184,20 @@ names(table) <- NULL
 
 table %>% 
 kbl() %>%
- kable_classic(full_width = T, html_font = "Book Antiqua")
+ kable_classic(full_width = T, html_font = "Georgia")
 ```
 
 
 
 
-### Key Variables
+### Three Key Variables
 
-Since this analysis focuses on  kicking the key variable we are looking at in the data is `Kicks From Hand`. This is the total number of kicks in play, this does not include penalty kicks. This analysis will also look at `Win Rate`, the percentage number of wins for a team and `Kick Rate`, the percentage number of times a team has kicked more than their opposition. Both have been calculated in the following ways:
+The first key variable explored in this investigation is `Kicks From Hand`. This is the total number of kicks in play but does not include penalty kicks. `Win Rate` is the second key variable explored, and can be defined as the percentage number of wins for a team. Finally `Kick Rate`, which is the percentage number of times a team has kicked more than their opposition. `Win Rate` and `Kick Rate` have been calculated in the following ways:
 
 <br> 
 
 $$Win\:Rate = \frac{Number\:of\:Matches\:Won}{Total\:Matches\:Played}$$
+
 <br>
 
 $$Kick\:Rate = \frac{Number\:of\:Times\:Kicked\: More\: Than\: Opposition}{Total\:Matches\:Played}$$
@@ -199,23 +208,35 @@ $$Kick\:Rate = \frac{Number\:of\:Times\:Kicked\: More\: Than\: Opposition}{Total
 
 #### Rugby Pass Data
 
-Although there are a total of 425 professional rugby matches, the majority of the matches are from 2020. For competitions currently being played e.g. The Rugby Premiership and Pro 14, only matches from the current season are included in the dataset as this is the only data that can be collected from the website. International matches are almost complete, however, there are a few important matches from the World Cup (Semi-finals onwards) whichare also missing.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+no <- team_data %>% 
+  distinct(match, date, .keep_all = T) %>% 
+  group_by(year) %>% 
+  summarise(count = n()) %>% 
+  filter(year == 2020) %>% 
+  pull(count)
+```
+
+There is not an even distribution of match data available on Rugby Pass over the time period, with the majority (`r no`) taking place in 2020. Additionally, for competitions which are currently in progress, such as The Rugby Premiership and Pro 14, only the match data from the current season are included in the dataset. Previous seasons cannot be sourced. International match data are almost complete, however there are a few important matches from the World Cup (Semi-finals onwards) which are missing.
 
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-team_data %>% 
+ team_data %>% 
   distinct(match, date, .keep_all = T) %>% 
   group_by(year) %>% 
   summarise(Count = n()) %>% 
   rename(Year = year) %>% 
  kbl() %>%
-  kable_classic(full_width = F, html_font = "Book Antiqua")
+  kable_classic(full_width = F, html_font = "Georgia")
 ```
+
 <br>
+
 #### Variable Limitions
 
-The variables collected offer an overview of the matches. Unfortunately, it is difficult to distinguish from different circumstances. This is problematic when looking at kicking data. Tactically, a kick from a team's own 22 is very different from a kick from the halfway line or inside the oppositions half. This also applied to penalties as it is difficult to determine how each penalty was conceded e.g. from the breakdown or scrum.  These statistics would offer a much more detailed analysis than a general overview.
+`Kicks From Hand` only includes the total number of kicks made in each match. The dataset does not give a more precise count of different types of kicks in a match. Tactically, a kick from a team's own 22 is very different from a kick from the halfway line or inside the opposition's half. A breakdown of the number of kicks by territory would better reflect this. This can also be applied to penalties as it is difficult to determine how each penalty was conceded e.g. from the breakdown or scrum. This data would offer a much more detailed analysis than what the current dataset allows.
 
 
 
@@ -239,34 +260,53 @@ matches %>%
   geom_bar(stat = "count", show.legend = FALSE) +
   facet_wrap(~type_of_team) + 
  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  labs(title = "Percentage Number of Wins for Teams That Kick More Their Oppositon",
+  labs(title = "Results of Matches Where Teams Have Kicked More Than The Oppositon",
        x = "Result",
        y = "Percentage") + 
   theme_minimal() +
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 ```
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kicked_more <- matches %>% 
+ filter(kicks == "more") 
+
+percent_no <- kicked_more %>% 
+  group_by(result) %>% 
+  summarise(count = n(), prop = n()/nrow(kicked_more)) %>% 
+  filter(result == "won") %>% 
+  mutate(prop = paste(round(prop * 100), "%", sep = "")) %>% 
+  pull(prop)
+
+  
+```
 
 
-\n When looking at the winners of the matches, in both club and international matches the team that kicked more than their opponents won a larger proportion of their matches. This suggesting that if a team kicks more than their opposition then they are more likely to win the match. From this dataset, a team that kicks more than their opposition wins around 67% of their matches. 
+<br> 
+
+This graph shows the results when a team has kicked more than the opposition, split over both club and international games. The data shows that teams that kick more frequently than their opponents won around `r percent_no` of their matches.
 
 
 ### Hypothesis Test 
 
-Since this dataset is a sample a hypothesis test needs to be carried out to confirm if 67% reflects the wider game. The method for the test can be found in the dropdown.
+Since this dataset is a sample, a hypothesis test needs to be carried out to confirm if `r percent_no` is representative across all professional matches. The method for the test can be found in the dropdown.
 
 <br>
 <details class='maths'>
 <summary>**Hypothesis Test**</summary>
 
-Using this data lets put that to the test if the claim is statistically significant. If kicking did not have an impact on matches you would expect the proportion of match wins to be around 50% 
+If kicking had no impact on the win rate of matches, the expected proportion of matches won would be around 50%. A hypothesis test can be used to see if the dataset reflects the whole population or simply sampling variation.
 
-H~o~: π matches won = 0.5
+The Hypothesis test can be defined as follows:
+
+H~0~: π matches won = 0.5
 
 H~A~: π matches won > 0.5
 
 α = 0.05
+
+When looking at teams that kick more than their opposition, if the p-value is greater than 0.05 then we accept H~0~. We can then conclude that the proportion of the number of matches won should be around 50%. If the p-value is less than 0.05 then H~0~ is rejected in favour of H~A~. If this is the case, we can then conclude that the proportion of the number of matches won is greater than 50%.
 
 ```{r include=FALSE}
 test_matches <- matches %>% 
@@ -303,14 +343,14 @@ null_distribution %>%
   visualise(bins = 30) + 
   shade_p_value(obs_stat = observed_stat, direction = "right") +
   labs(title = paste("p-value =", p_value ))+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 
      
 ```
-\n 
+<br> 
 
-The p-value is less than α so we reject H~0~ in favour of H~A~. There is enough evidence from our data to suggest that the proportion of wins is statistically significantly greater than the null value. This means that statistically, teams that kick more than their opponents win more games.
+The p-value is less than α, so H~0~ is rejected in favour of H~A~. There is enough evidence from the data to suggest that the proportion of wins is statistically significantly greater than the null value. This means that statistically, teams that kick more than their opponents win a larger proportion of their games.
 
 </details>
 <br>
@@ -319,8 +359,9 @@ The p-value is less than α so we reject H~0~ in favour of H~A~. There is enough
 
 ### Results of the test
 
-The hypothesis test has shown that there is enough evidence from this dataset to say that teams that kick more than their opponent will win more of their games.
-A further computation can be carried out to give a percentage range within a 95% confidence interval.
+The hypothesis test has shown that there is enough evidence from this dataset to reliably conclude that teams that kick more than their opponent will win more of their games.
+
+A further computation can be carried out to give a percentage range within a 95% confidence interval of the population.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 bootstrap_resample <- test_matches %>%
@@ -337,22 +378,31 @@ kick_ci_95 <- bootstrap_resample %>%
   get_confidence_interval(level = 0.95, type = "percentile") %>% 
   mutate_all(~ paste(round(. * 100, 2), "%", sep = "")) 
 
-names(kick_ci_95) <- c("Lower Confidence Interval", "Upper Confidence Interval")
 
+names(kick_ci_95) <- c("Lower Confidence Interval", "Upper Confidence Interval")
+```
+
+```{r include=FALSE}
+lower_ci <- kick_ci_95 %>% 
+  pull(`Lower Confidence Interval`)
+
+upper_ci <- kick_ci_95 %>% 
+  pull(`Upper Confidence Interval`)
+```
+
+```{r echo=FALSE}
 kick_ci_95 %>% 
   kbl() %>%
-  kable_classic(full_width = F, html_font = "Book Antiqua")
+  kable_classic(full_width = F, html_font = "Georgia")
 ```
 
 
 <br>
 
-From this dataset, we can estimate that teams that kick more than their opponents win between 64% - 73% of their total matches with a 95% confidence interval. Teams that kick more do win more of their matches. Kicking more does not result in winning games but these estimates do suggest that it does play a role. 
+From this dataset, it is estimated that teams that kick more than their opponents win between `r lower_ci` - `r upper_ci` of their total matches within a 95% confidence interval. 
 
 ## Win Rate vs Kick Rate
-
-To try and explore the role kicking plays, we will look at the breakdown of the teams. Firstly looking at Win Rate vs Kick Rate
-\n
+<br>
 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -398,27 +448,27 @@ team_rates %>%
   aes(x = kick_rate, y = win_rate) +
   geom_point() +
   geom_smooth(method = lm, se = FALSE) +
-  labs(title = paste("Pearson Corrleation =", round(cor(team_rates$kick_rate, team_rates$win_rate), 4)),
+  labs(title = paste("Pearson Correlation =", round(cor(team_rates$kick_rate, team_rates$win_rate), 4)),
        x = "Kick Rate",
        y = "Win Rate") +
    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme_minimal() + 
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
+cor <- round(cor(team_rates$kick_rate, team_rates$win_rate), 4)
 
 ```
 
-\n
+<br>
 
-If we plot the two variables together there is a weak correlation of 0.257. There is quite a lot of spread within the data but there is still a general trend; teams that have a higher kick rate also have a higher win rate. As there is a weak correlation,  there are other variables that also lead to a higher Win Rate, not just Kick Rate.
+Plotting `Win Rate` and `Kick Rate` there is a moderate correlation of `r cor`. While there is quite a lot of spread within the data, there is still a general trend: teams that have a higher kick rate also have a higher win rate. As there is a moderate correlation, other variables can also be used to explain `Win Rate`.
 
-## Win Rate vs Average Number of Kicks Per Game 
+## Win Rate vs Average Number of Kicks per Game 
 
+<br> 
 
-
-\n 
-### Top 10 teams by Avgerage Number Of Kicks Per Game
+### Top 10 teams by Average Number of Kicks per Game
 ```{r get avg no of kicks, message=FALSE, warning=FALSE, include=FALSE}
 avg_kicks <- matches %>%
   group_by(team) %>%
@@ -429,7 +479,8 @@ team_kicks <- team_results %>%
 
 ```
 
-\n 
+<br> 
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 team_kicks %>%
   filter(no_matches > 5) %>%
@@ -445,9 +496,12 @@ team_kicks %>%
  rename_all( ~ str_replace_all(., "_", " ")) %>% 
     rename_all( ~ str_to_title(.))   %>% 
  kbl() %>%
-  kable_classic(full_width = T, html_font =  "Book Antiqua")
+  kable_classic(full_width = T, html_font =  "Georgia")
 ```
-Looking at the top 10 teams, there is no pattern between the teams with the higher average number of kicks and win rate.  Interestingly of the top 10, 4 of the teams are international teams showing how kicking is more prevalent in the international game. If we drill down further we can see that this is the case for all matches:
+
+Looking at the top ten teams, there is no pattern between those with the higher average number of kicks and win rate. Four of the top ten are international teams, showing that kicking is more prevalent in the international game.
+
+The split can be shown as follows:
 
 
 <br>
@@ -460,15 +514,15 @@ matches %>%
 rename_all( ~ str_replace_all(., "_", " ")) %>% 
     rename_all( ~ str_to_title(.))   %>% 
  kbl() %>%
-  kable_classic(full_width = F, html_font = "Book Antiqua")
+  kable_classic(full_width = F, html_font = "Georgia")
 ```
 
 
 <br>
 
-### Win Rate vs Average Number of Kicks Per Game Plot
+### Win Rate vs Average Number of Kicks per Game Plot
 
-\n 
+<br> 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 team_kicks %>%
@@ -476,29 +530,27 @@ team_kicks %>%
   aes(x = avg._no._kicks_per_game, y = win_rate) +
   geom_point() +
  geom_smooth(method = lm, se = FALSE) +
-  labs(title = paste("Pearson Corrleation =", round(cor(team_kicks$avg._no._kicks_per_game, team_kicks$win_rate), 4)),
+  labs(title = paste("Pearson Correlation =", round(cor(team_kicks$avg._no._kicks_per_game, team_kicks$win_rate), 4)),
        x = "Avg. No. Kicks Per Game",
        y = "Win Rate") +
    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme_minimal() +
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 
 ```
 
 
 
+<br> 
 
-
-\n 
-
-If we then look at the correlation we can see that there is even less of a correlation between the average number of kicks per game and win rate. This adds a level of complexity to the issue. We have seen that kicking more than the opposition can result in a higher win rate, however from this, simply having a high number of kicks per game does not. Further exploration is needed to try to explain this.
+There is no correlation between `Avg. No. Kicks Per Game` and `Win Rate`. This adds a level of complexity as kicking more than the opposition can result in a higher win rate, however, simply having a high number of kicks per game does not have the same result. 
 
 ## Further Exploration 
 
-\n
+<br>
 
-As the data is more complete when looking at international matches, this exploration will focus only on the international game. As we have seen teams that if a team kicks more than their opposition there is a higher chance of winning. Teams that do this more regularly also have a higher win rate. However, having a higher number of kicks does not result in a better win rate. More variables can explain this. 
+As the data is more complete when looking at international matches, this exploration will now only focus on the international game.
 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -529,15 +581,15 @@ data %>%
        x = "Variable",
        y = "Correlation with Kicks From Hand") + 
   theme_minimal() +
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 ```
 
 <br> 
 
-Anything over 0.2 shows a weak correlation. From this, there appears to be a weak correlation between the Number of Kicks from hand and the number of Penalty Goals. This could perhaps explain why teams that kick more than their opponents have a higher chance of winning as the data suggests they are more likely to have more opportunities to kick at goal.  However, further exploration is still needed to try to explain this correlation. 
+Any correlation score over 0.2 is weak. There appears to be a weak correlation between the number of `Kicks from Hand` and the number of `Penalty Goal Successful` and `Penalty Goal Attempts`. This could explain some of the reasons why teams that kick more than their opponent have a higher chance of winning. 
 
-Unfortunately the data there is too much spread in the data and variables are not ideal to produce a predictive model but they can offer some insight by producing an explanatory model
+Unfortunately the data variables are not suited to make an accurate model to explain this link. However, the data can offer some insight by highlighting key variables within an explanatory model.
 
 ### Explanatory Model 
 
@@ -573,7 +625,7 @@ mod1a <- lm(kicks_from_hand ~ team, data = model_data)
 
 ```{r}
 autoplot(mod1a) +
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod1a)
 ```
@@ -584,7 +636,7 @@ As with the top 10 teams with the highest average kicks per game, England, Franc
 mod1b <- lm(kicks_from_hand ~ penalty_goal_successful, data = model_data)
 
 autoplot(mod1b) +
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod1b)
 ```
@@ -599,7 +651,7 @@ mod1a has the highest r^2 so that will be used.
 mod2a <- lm(kicks_from_hand ~ team + penalty_goal_successful, data = model_data)
 
 autoplot(mod2a)+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod2a)
 ```
@@ -611,7 +663,7 @@ summary(mod2a)
 mod2b <- lm(kicks_from_hand ~ team + year, data = model_data)
 
 autoplot(mod2b)+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod2b)
 ```
@@ -624,7 +676,7 @@ mod2a has the highest r^2 so is the best option
 mod3a <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw, data = model_data)
 
 autoplot(mod3a)+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod3a)
 ```
@@ -633,12 +685,12 @@ summary(mod3a)
 mod3b <- lm(kicks_from_hand~ team + penalty_goal_successful+total_turnovers_gained , data = model_data)
 
 autoplot(mod3b)+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod3b)
 ```
 
-mod3a  has the highest r^2 is the better model going forward
+mod3a  has the highest r^2 is the better model going forward.
 
 
 
@@ -661,7 +713,7 @@ summary(mod4b)
 mod4c <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + lineout_won_steal, data = model_data)
 
 autoplot(mod4c)+
-  theme(text = element_text(family = "Book Antiqua"))
+  theme(text = element_text(family = "Georgia"))
 
 summary(mod4c)
 
@@ -688,6 +740,8 @@ mod4b is the best model as team:penalty_goal_successful is not statistically sig
 
 ```{r}
 best_model <- mod4b
+
+relaimpo::calc.relimp(best_model)
 ```
 
 
@@ -703,22 +757,29 @@ summary(best_model)
 <br> 
 
 
-From the summary of the best fitting model, we can gather some useful insights. Unfortunately because of the spread of the data, the model only fits 33% of the data. Although the model is not perfect it does highlight a few interesting points. The model highlights which teams are more likely to play a kicking game (the higher estimate for the team). There is also a statistically significant relationship with the number of penalty goals, and both own lineouts won and stolen. Unfortunately because of this dataset, it is very difficult to draw any conclusions. However, because there is a statistically significant relationship with those points it suggests that they are important in explaining why teams that kick more win more. 
+The model summary highlights which teams are more likely to play a kicking game (the higher estimate in the summary, the more likely the team is to kick more). But, because of the spread in the data and the lack of precise variables it is not possible to draw any key conclusions. However, there is a statistically significant relationship between the number of `penalty goal attempts`, `own lineouts won` and `total turnovers gained` which suggests that there is a link between those variables.
 
-One possible explanation could be that when a team kicks more than their opposition the game would be played more in the opposition's territory so therefore any penalties that are awarded would be within kicking distance. Although without looking at the type of kicks or why penalties are conceded it is difficult to come to any formal conclusions from this dataset.
+One possible explanation could be that when a team kicks more than their opposition, the game would be played more in the opposition's territory, so therefore any penalties that are awarded would be within kicking distance. However, without looking at the type of kicks or why penalties are conceded it is difficult to come to any formal conclusions using this dataset.
 
 
 
 
 # Key Takeaways
-* Teams that kick more than their opposition are between 63% - 73% more likely to win the match
-* Teams that constantly kick more than their opponents are also more likely to have a higher win rate 
-* There is no link to having an average behind having a higher number of kicks per game
-* The most important factor in determining the number of kicks is the team. The model highlights which team play more likely to play a kicking game.
-* The model also offers some possible explanations for why teams that kick more than their opposition because teams that have a higher number of kicks in a game may also have more opportunities to kick at goal and more likely to have successful lineouts.
+* Teams that kick more than their opposition are between `r lower_ci` - `r upper_ci` more likely to win.
+* Teams that constantly kick more than their opponents are also more likely to have a higher win rate.
+* There is no link between having a higher average number of kicks per game and having a higher win rate.
+* Looking at international matches, the most important factor in determining the number of kicks in a match is the team. The model highlights which teams are more likely to kick the ball.
+* The model also highlights possible links between the number of `kicks from hand`, `penalty goal attempts`, `own lineouts won` and `total turnovers gained`. However no formal conclusions can be made from this dataset. 
 
 
 
 # Future Research
 
-This dataset has led to come useful insights, however, it does not go the full way in fulling understanding the kicking. With a broader dataset and an analysis of every single kick in the game, a better understanding can be made. 
+This dataset has led to some useful insights, but fails to explain the links between `kicks from hand`, `penalty goal attempts`, `own lineouts won` and `total turnovers gained`. A dataset that breaks down the location of kicks and the reasons for why penalties are conceded could perhaps better explain the link. Unfortunately this data cannot be scraped from the Rugby Pass website.
+
+<br>
+
+# References
+
+
+
