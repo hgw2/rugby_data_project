@@ -223,7 +223,7 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 glmulti_analysis.*
-Untiled.*
+Untitled.*
 
 # R Environment Variables
 .Renviron
