@@ -17,7 +17,10 @@ clean_team_data <- function(){
       select(-competition: -team) %>% 
       colnames()
     
-    part_data <-  part_data %>% 
+    part_data <-  part_data  %>% 
+      group_by(date, match) %>% 
+      mutate(home_away = if_else(row_number() == 1, "home", "away"), .after = match) %>% 
+      ungroup() %>% 
       pivot_longer(names,names_to = "stat", values_to = "values") %>% 
       mutate(season = as.character(season)) %>% 
       mutate(stat = recode(stat,
@@ -41,14 +44,41 @@ clean_team_data <- function(){
                            
       )) %>% 
       mutate(team = str_to_lower(team)) %>% 
-      mutate(team = str_replace(team," ", "_"))
+      mutate(team = str_replace(team," ", "_")) %>% 
+      mutate(match_id = paste(str_replace_all(as.character(date),"-", ""),
+                              str_extract(match, "^[a-z0-9]{2}"),
+                              "vs",
+                              str_extract(match, "(?<=vs_)[a-z0-9]{2}"),
+                              sep = "")
+             , .before = competition)  %>% 
+      mutate(match_id = if_else(home_away == "home", 
+                                paste("h", match_id,  sep = ""),
+                                paste("a",match_id,  sep = "")))
+    
     
     complete_data <- bind_rows(complete_data, part_data)
 
-}
+  }
+  
+ matches <- complete_data %>% 
+    select(match_id:team) %>% 
+    distinct(match_id, .keep_all = T)
+ 
+team_data <-  complete_data %>% 
+  select(match_id, stat, values) %>% 
+  pivot_wider(names_from = stat, values_from = values)
 
 dir.create("5_clean_data")
+dir.create("5_clean_data/sql")
+
+
 
 complete_data %>% 
   write_csv("5_clean_data/team_data.csv")
+
+team_data %>% 
+  write_csv("5_clean_data/sql/team_data.csv")
+
+matches %>% 
+  write_csv("5_clean_data/sql/match_data.csv")
 }

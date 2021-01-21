@@ -1,0 +1,202 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(randomForest)
+library(caret)
+library(modelr)
+
+```
+
+
+```{r}
+matches <- read_csv("5_clean_data/team_data.csv") %>% 
+  pivot_wider(names_from = stat, values_from = values)
+
+home_teams <- matches %>% 
+  filter(home_away == "home")
+
+away_teams <- matches %>% 
+  filter(home_away == "away")
+
+
+away_oppo <- away_teams %>% 
+  select(-c(competition, season, team, home_away)) %>% 
+  rename_at(vars(try_scored:scrum_lost), ~ paste("opposition_", ., sep = ""))
+
+home_oppo <- home_teams %>% 
+  select(-c(competition, season, team, home_away)) %>% 
+  rename_at(vars(try_scored:scrum_lost), ~ paste("opposition_", ., sep = ""))
+
+home_teams <- home_teams %>% 
+  left_join(away_oppo, by = c("date", "match"))
+
+away_teams <- away_teams %>% 
+  left_join(home_oppo, by = c("date", "match"))
+
+matches <- home_teams %>% 
+  bind_rows(away_teams) %>% 
+  arrange(date, match)
+
+```
+
+
+```{r}
+model_data <- matches %>%
+  mutate_if(is.character, as.factor)
+
+n_data <- nrow(model_data)
+test_index <- sample(1:n_data, size = n_data*0.2)
+test  <- slice(model_data, test_index)
+train <- slice(model_data, -test_index)
+```
+
+
+```{r}
+model_data %>% 
+  summarise_all(~ sum(is.infinite(.)))
+
+predictors <- setdiff(names(model_data), c("team", "match", "date", "season", "lineout_throw_won_clean", "try_scored", "points_scored", "try_assist", "conversion_successful",  "penalty_goal_successful",  "drop_kick_successful", "drop_goal_missed", "penalty_missed", "conversion_missed", "opposition_try_scored",  "opposition_try_assist" , "opposition_points_scored", "opposition_conversion_successful", "opposition_penalty_goal_successful", "opposition_drop_kick_successful", "opposition_drop_goal_missed",  "opposition_penalty_missed",  "opposition_conversion_missed", "opposition_lineout_throw_won_clean"))
+
+
+```
+
+
+```{r}
+#train <- train %>% 
+ # select(predictors)
+
+paste(predictors, collapse = " + ")
+```
+
+
+```{r}
+m1 <- randomForest(
+  formula = try_scored ~ competition + home_away + ball_carry_meters + ball_carry + beat_defender + line_break + passes + offload + total_turnovers_conceded + tackle_made + tackle_missed + total_turnovers_gained + kicks_from_hand + lineout_won_own_throw + lineout_won_steal + penalties_conceded + red_card + yellow_card + possession + rucks_won + rucks_lost + mauls_won + scrum_won + scrum_lost + opposition_ball_carry_meters + opposition_ball_carry + opposition_beat_defender + opposition_line_break + opposition_passes + opposition_offload + opposition_total_turnovers_conceded + opposition_tackle_made + opposition_tackle_missed + opposition_total_turnovers_gained + opposition_kicks_from_hand + opposition_lineout_won_own_throw + opposition_lineout_won_steal + opposition_penalties_conceded + opposition_red_card + opposition_yellow_card + opposition_possession + opposition_rucks_won + opposition_rucks_lost + opposition_mauls_won + opposition_scrum_won + opposition_scrum_lost,
+  data    = train, 
+  importance = TRUE, replace = TRUE, ntree = 1000)
+```
+
+
+```{r}
+varImpPlot(m1)
+```
+
+```{r}
+sqrt(m1$mse[which.min(m1$mse)])
+```
+```{r}
+test %>% 
+  add_predictions(m1) %>% 
+  select(match:try_scored, pred)
+```
+
+
+```{r}
+rmse(m1, train)
+rmse(m1, test)
+```
+```{r}
+con_rate <- matches %>%  
+  select(conversion_successful, conversion_missed) %>% 
+  summarise_all(sum) %>% 
+  mutate(total = conversion_successful + conversion_missed, 
+         prob_scoring = conversion_successful/total) %>% 
+  pull(prob_scoring)
+```
+```{r}
+m2 <- randomForest(
+  formula = penalty_goal_successful ~ competition + home_away + ball_carry_meters + ball_carry + beat_defender + line_break + passes + offload + total_turnovers_conceded + tackle_made + tackle_missed + total_turnovers_gained + kicks_from_hand + lineout_won_own_throw + lineout_won_steal + penalties_conceded + red_card + yellow_card + possession + rucks_won + rucks_lost + mauls_won + scrum_won + scrum_lost + opposition_ball_carry_meters + opposition_ball_carry + opposition_beat_defender + opposition_line_break + opposition_passes + opposition_offload + opposition_total_turnovers_conceded + opposition_tackle_made + opposition_tackle_missed + opposition_total_turnovers_gained + opposition_kicks_from_hand + opposition_lineout_won_own_throw + opposition_lineout_won_steal + opposition_penalties_conceded + opposition_red_card + opposition_yellow_card + opposition_possession + opposition_rucks_won + opposition_rucks_lost + opposition_mauls_won + opposition_scrum_won + opposition_scrum_lost,
+  data    = train, 
+  importance = TRUE, replace = TRUE, ntree = 1000)
+```
+
+```{r}
+rmse(m2, train)
+rmse(m2, test)
+```
+```{r}
+m3 <- randomForest(
+  formula = drop_kick_successful ~ competition + home_away + ball_carry_meters + ball_carry + beat_defender + line_break + passes + offload + total_turnovers_conceded +  tackle_made + tackle_missed + total_turnovers_gained + kicks_from_hand  + lineout_won_own_throw + lineout_won_steal + penalties_conceded + red_card + yellow_card + possession + drop_goal_missed + penalty_missed  + rucks_won + rucks_lost + mauls_won + scrum_won + scrum_lost,
+  data    = train, 
+  importance = TRUE, replace = TRUE, ntree = 1000)
+
+rmse(m3, train)
+rmse(m3, test)
+```
+
+
+```{r}
+xp <- model_data %>% 
+ add_predictions(m1) %>% 
+  rename(xtries = pred) %>% 
+   add_predictions(m2) %>% 
+  rename(xpen = pred) %>% 
+   add_predictions(m3) %>% 
+  rename(xdg = pred) %>% 
+  mutate(xcon = xtries * con_rate) %>% 
+  mutate(xpoints = (xtries * 5) + (xcon*2) + (xpen *3) + (xdg *3), .after = team) %>% 
+  relocate(points_scored, .after = team) %>% 
+
+  group_by(match, date) %>%
+ 
+  #Calculate the totals for each match
+   mutate(
+    total_scored = sum(points_scored),
+    total_xp = sum(xpoints)
+  ) %>%
+  ungroup() %>%
+  
+  # Subtract own point and kicks from total to get oppositions in the row
+  mutate(
+    opposition_points = total_scored - points_scored,
+    opposition_xp = total_xp - xpoints
+  ) %>%
+  select(-total_scored, -total_xp) %>%
+ 
+   # Compare own stats with oppositions 
+  mutate(
+    result = case_when(
+      points_scored > opposition_points ~ "won",
+      points_scored < opposition_points ~ "lost",
+      points_scored == opposition_points ~ "draw"
+    ), 
+    result_xp =  case_when(
+    xp_result = xpoints > opposition_xp ~ "won",
+      xpoints < opposition_xp ~ "lost",
+     xpoints == opposition_xp ~ "draw"
+    )) %>% 
+    mutate(points_diff = xpoints - opposition_xp) 
+```
+
+```{r}
+xp %>% 
+  filter(competition == "six_nations") %>% 
+  mutate(bp = 0) %>% 
+  mutate(bp = ifelse(xtries >= 4, bp + 1, bp)) %>% 
+   mutate(bp = ifelse(points_diff <= -1 & points_diff >= -7, bp + 1, bp)) %>% 
+  mutate(tourn_points = case_when(
+    result_xp == "won" ~ 4,
+    result_xp == "draw" ~ 2,
+    result_xp == "lost" ~ 0 
+    
+  )) %>% 
+  fastDummies::dummy_cols(select_columns = "result_xp", remove_first_dummy = FALSE) %>% 
+  group_by(team) %>% 
+  summarise(played = n(), win = sum(result_xp_won), lost = sum(result_xp_lost), draw = (played - win - lost), bp = sum(bp), points_diff = sum(points_diff), total_points = sum(tourn_points)) %>% 
+  mutate(total_points = total_points + bp) %>% 
+  arrange(desc(total_points))
+```
+
+```{r}
+xp %>% 
+  filter(competition == "six_nations", team == "wales")
+```
+```{r}
+alias(penalty_goal_successful ~ competition + home_away + ball_carry_meters + ball_carry + beat_defender + line_break + passes + offload + total_turnovers_conceded + tackle_made + tackle_missed + total_turnovers_gained + kicks_from_hand + lineout_won_own_throw + lineout_won_steal + penalties_conceded + red_card + yellow_card + possession + rucks_won + rucks_lost + mauls_won + scrum_won + scrum_lost + opposition_ball_carry_meters + opposition_ball_carry + opposition_beat_defender + opposition_line_break + opposition_passes + opposition_offload + opposition_total_turnovers_conceded + opposition_tackle_made + opposition_tackle_missed + opposition_total_turnovers_gained + opposition_kicks_from_hand + opposition_lineout_won_own_throw + opposition_lineout_won_steal + opposition_penalties_conceded + opposition_red_card + opposition_yellow_card + opposition_possession + opposition_rucks_won + opposition_rucks_lost + opposition_mauls_won + opposition_scrum_won + opposition_scrum_lost,
+  data    = train)
+```
+

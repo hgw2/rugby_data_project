@@ -3,14 +3,13 @@ title: "The Team That Kicks More Wins More"
 author: "Harry Williams"
 date: "08/01/2021"
 output: 
-  
   html_document: 
     theme: journal
     toc: yes
     toc_float: yes
     number_sections: yes
     df_print: kable
-    mainfont: Calibri Light
+ 
 ---
 
 ```{r setup, include=FALSE}

@@ -222,6 +222,8 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+glmulti_analysis.*
+Untiled.*
 
 # R Environment Variables
 .Renviron
