@@ -41,7 +41,7 @@ library(showtext)
 
 ## The Data 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
- #source("1_get_data/get_data.R")
+# source("1_get_data/get_data.R")
 
 
 
@@ -67,37 +67,37 @@ team_data <- read_csv("5_clean_data/team_data.csv",
     cols(
       season = "c"
     )
-) %>% 
-  mutate(year = year(date), .after = season) %>% 
-  select(-season) %>% 
-  mutate(type_of_team = if_else(team %in% international, "international", "club"), .after = team) %>% 
+) %>%
+  mutate(year = year(date), .after = season) %>%
+  select(-season) %>%
+  mutate(type_of_team = if_else(team %in% international, "international", "club"), .after = team) %>%
   mutate(hemisphere = case_when(
     competition %in% c("autumn_nations_cup", "european_champions_cup", "premiership", "premiership_cup", "pro_14", "six_nations", "top_14") ~ "northern",
-    competition%in% c("internationals", "rugby_world_cup") ~ "mixed",
-    TRUE ~ "southern"), .after = competition
-  )
+    competition %in% c("internationals", "rugby_world_cup") ~ "mixed",
+    TRUE ~ "southern"
+  ), .after = competition)
 
-number_matches <- team_data %>% 
-  distinct(match_id) %>% 
+number_matches <- team_data %>%
+  distinct(match_id) %>%
   nrow()
 ```
 
 ```{r Get number of wins and kicks, message=FALSE, warning=FALSE, include=FALSE}
 
 
-# Create Data showing the teams result from the match and whether they kicked more than the opposition 
+# Create Data showing the teams result from the match and whether they kicked more than the opposition
 matches <- team_data %>%
   filter(stat == "points_scored" | stat == "kicks_from_hand") %>%
   pivot_wider(names_from = stat, values_from = values) %>%
   group_by(date, match) %>%
- 
-  #Calculate the totals for each match
-   mutate(
+
+  # Calculate the totals for each match
+  mutate(
     total_scored = sum(points_scored),
     total_kick = sum(kicks_from_hand)
   ) %>%
   ungroup() %>%
-  
+
   # Subtract own point and kicks from total to get oppositions in the row
   mutate(
     opposition_points = total_scored - points_scored,
@@ -105,17 +105,16 @@ matches <- team_data %>%
   ) %>%
   select(-total_scored, -total_kick) %>%
   mutate(kick_diff = kicks_from_hand - opposition_kicks) %>%
- 
-   # Compare own stats with oppositions 
+
+  # Compare own stats with oppositions
   mutate(
     result = case_when(
       points_scored > opposition_points ~ "won",
       points_scored < opposition_points ~ "lost",
       points_scored == opposition_points ~ "draw"
     ),
-    kicks =ifelse(kicks_from_hand > opposition_kicks, "more", "not_more")
-  ) 
-
+    kicks = ifelse(kicks_from_hand > opposition_kicks, "more", "not_more")
+  )
 ```
 
 
@@ -125,16 +124,16 @@ matches <- team_data %>%
 Data has been sourced from the Rugby Pass website.^[https://www.rugbypass.com/] At time of writing this includes a total of `r number_matches` professional global Rugby matches over the last 3 years. This includes both international and club rugby games from the following competitions:
 
 ```{r Create Competetion Table, echo=FALSE, message=FALSE, warning=FALSE}
-team_data %>% 
-  select(competition, type_of_team, hemisphere) %>% 
-  distinct(competition, .keep_all = TRUE) %>% 
-  arrange(competition) %>% 
-  mutate_all( ~ str_replace_all(., "_", " ")) %>% 
-    mutate_all( ~ str_to_title(.)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
- kbl() %>%
-  kable_classic(full_width = T, html_font = "Georgia" )
+team_data %>%
+  select(competition, type_of_team, hemisphere) %>%
+  distinct(competition, .keep_all = TRUE) %>%
+  arrange(competition) %>%
+  mutate_all(~ str_replace_all(., "_", " ")) %>%
+  mutate_all(~ str_to_title(.)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
+  kbl() %>%
+  kable_classic(full_width = T, html_font = "Georgia")
 ```
 
 ### Variables
@@ -143,50 +142,50 @@ The variables collected from each match are as follows:
 
 ```{r Creat stats table, echo=FALSE, message=FALSE, warning=FALSE}
 
-row_1 <- team_data %>% 
-  distinct(stat) %>%  
-  arrange(stat)%>% 
-  mutate_all( ~ str_replace_all(., "_", " ")) %>% 
-    mutate_all( ~ str_to_title(.)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
+row_1 <- team_data %>%
+  distinct(stat) %>%
+  arrange(stat) %>%
+  mutate_all(~ str_replace_all(., "_", " ")) %>%
+  mutate_all(~ str_to_title(.)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
   slice(1:8)
 
-row_2 <- team_data %>% 
-  distinct(stat) %>% 
-  arrange(stat)%>% 
-  mutate_all( ~ str_replace_all(., "_", " ")) %>% 
-    mutate_all( ~ str_to_title(.)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
+row_2 <- team_data %>%
+  distinct(stat) %>%
+  arrange(stat) %>%
+  mutate_all(~ str_replace_all(., "_", " ")) %>%
+  mutate_all(~ str_to_title(.)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
   slice(9:16)
 
 
-row_3 <- team_data %>% 
-  distinct(stat) %>% 
-  arrange(stat)%>% 
-  mutate_all( ~ str_replace_all(., "_", " ")) %>% 
-    mutate_all( ~ str_to_title(.)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
+row_3 <- team_data %>%
+  distinct(stat) %>%
+  arrange(stat) %>%
+  mutate_all(~ str_replace_all(., "_", " ")) %>%
+  mutate_all(~ str_to_title(.)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
   slice(17:24)
 
-row_4 <- team_data %>% 
-  distinct(stat) %>% 
-  arrange(stat)%>% 
-  mutate_all( ~ str_replace_all(., "_", " ")) %>% 
-    mutate_all( ~ str_to_title(.)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
+row_4 <- team_data %>%
+  distinct(stat) %>%
+  arrange(stat) %>%
+  mutate_all(~ str_replace_all(., "_", " ")) %>%
+  mutate_all(~ str_to_title(.)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
   slice(25:32)
 
 table <- bind_cols(row_1, row_2, row_3, row_4)
 
 names(table) <- NULL
 
-table %>% 
-kbl() %>%
- kable_classic(full_width = T, html_font = "Georgia")
+table %>%
+  kbl() %>%
+  kable_classic(full_width = T, html_font = "Georgia")
 ```
 
 
@@ -212,11 +211,11 @@ $$Kick\:Rate = \frac{Number\:of\:Times\:Kicked\: More\: Than\: Opposition}{Total
 
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-no <- team_data %>% 
-  distinct(match, date, .keep_all = T) %>% 
-  group_by(year) %>% 
-  summarise(count = n()) %>% 
-  filter(year == 2020) %>% 
+no <- team_data %>%
+  distinct(match, date, .keep_all = T) %>%
+  group_by(year) %>%
+  summarise(count = n()) %>%
+  filter(year == 2020) %>%
   pull(count)
 ```
 
@@ -225,12 +224,12 @@ There is not an even distribution of match data available on Rugby Pass over the
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
- team_data %>% 
-  distinct(match, date, .keep_all = T) %>% 
-  group_by(year) %>% 
-  summarise(Count = n()) %>% 
-  rename(Year = year) %>% 
- kbl() %>%
+team_data %>%
+  distinct(match, date, .keep_all = T) %>%
+  group_by(year) %>%
+  summarise(Count = n()) %>%
+  rename(Year = year) %>%
+  kbl() %>%
   kable_classic(full_width = F, html_font = "Georgia")
 ```
 
@@ -253,35 +252,34 @@ Using the data, the percentage number of wins for teams that kick more than thei
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-matches %>% 
-  dplyr::filter(kicks == "more") %>% 
+matches %>%
+  dplyr::filter(kicks == "more") %>%
   mutate(kicks = str_to_title(kicks)) %>%
-  mutate(across(where(is.character), ~ str_to_title(.))) %>% 
+  mutate(across(where(is.character), ~ str_to_title(.))) %>%
   ggplot() +
   aes(x = result, y = ..prop.., group = kicks, fill = type_of_team) +
   geom_bar(stat = "count", show.legend = FALSE) +
-  facet_wrap(~type_of_team) + 
- scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  labs(title = "Results of Matches Where Teams Have Kicked More Than The Oppositon",
-       x = "Result",
-       y = "Percentage") + 
+  facet_wrap(~type_of_team) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Results of Matches Where Teams Have Kicked More Than The Oppositon",
+    x = "Result",
+    y = "Percentage"
+  ) +
   theme_minimal() +
   theme(text = element_text(family = "Georgia"))
-
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-kicked_more <- matches %>% 
- filter(kicks == "more") 
+kicked_more <- matches %>%
+  filter(kicks == "more")
 
-percent_no <- kicked_more %>% 
-  group_by(result) %>% 
-  summarise(count = n(), prop = n()/nrow(kicked_more)) %>% 
-  filter(result == "won") %>% 
-  mutate(prop = paste(round(prop * 100), "%", sep = "")) %>% 
+percent_no <- kicked_more %>%
+  group_by(result) %>%
+  summarise(count = n(), prop = n() / nrow(kicked_more)) %>%
+  filter(result == "won") %>%
+  mutate(prop = paste(round(prop * 100), "%", sep = "")) %>%
   pull(prop)
-
-  
 ```
 
 
@@ -311,44 +309,37 @@ H~A~: π matches won > 0.5
 When looking at teams that kick more than their opposition, if the p-value is greater than 0.05 then we accept H~0~. We can then conclude that the proportion of the number of matches won should be around 50%. If the p-value is less than 0.05 then H~0~ is rejected in favour of H~A~. If this is the case, we can then conclude that the proportion of the number of matches won is greater than 50%.
 
 ```{r include=FALSE}
-test_matches <- matches %>% 
-  mutate(won = result == "won") %>% 
+test_matches <- matches %>%
+  mutate(won = result == "won") %>%
   filter(kicks == "more")
-
-
 ```
 
 
 ```{r stats_test}
 
-tset_matches_sample <- test_matches 
-  
+tset_matches_sample <- test_matches
+
 null_distribution <- tset_matches_sample %>%
-  specify(response = won, success = "TRUE") %>% 
+  specify(response = won, success = "TRUE") %>%
   hypothesize(null = "point", p = 0.5) %>%
   generate(reps = 10000, type = "simulate") %>%
   calculate(stat = "prop")
 
 observed_stat <- tset_matches_sample %>%
-  specify(response = won, success = "TRUE") %>% 
+  specify(response = won, success = "TRUE") %>%
   calculate(stat = "prop")
-
-
 ```
 
 ```{r message=FALSE, warning=FALSE}
-  p_value <- null_distribution %>%
+p_value <- null_distribution %>%
   get_p_value(obs_stat = observed_stat, direction = "both")
 
 
 null_distribution %>%
-  visualise(bins = 30) + 
+  visualise(bins = 30) +
   shade_p_value(obs_stat = observed_stat, direction = "right") +
-  labs(title = paste("p-value =", p_value ))+
+  labs(title = paste("p-value =", p_value)) +
   theme(text = element_text(family = "Georgia"))
-
-
-     
 ```
 <br> 
 
@@ -367,7 +358,7 @@ A further computation can be carried out to give a percentage range within a 95%
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 bootstrap_resample <- test_matches %>%
-  specify(response = won, success = "TRUE") %>% 
+  specify(response = won, success = "TRUE") %>%
   generate(reps = 10000, type = "bootstrap") %>%
   calculate(stat = "prop")
 ```
@@ -377,23 +368,23 @@ bootstrap_resample <- test_matches %>%
 <br>
 ```{r echo=FALSE}
 kick_ci_95 <- bootstrap_resample %>%
-  get_confidence_interval(level = 0.95, type = "percentile") %>% 
-  mutate_all(~ paste(round(. * 100, 2), "%", sep = "")) 
+  get_confidence_interval(level = 0.95, type = "percentile") %>%
+  mutate_all(~ paste(round(. * 100, 2), "%", sep = ""))
 
 
 names(kick_ci_95) <- c("Lower Confidence Interval", "Upper Confidence Interval")
 ```
 
 ```{r include=FALSE}
-lower_ci <- kick_ci_95 %>% 
+lower_ci <- kick_ci_95 %>%
   pull(`Lower Confidence Interval`)
 
-upper_ci <- kick_ci_95 %>% 
+upper_ci <- kick_ci_95 %>%
   pull(`Upper Confidence Interval`)
 ```
 
 ```{r echo=FALSE}
-kick_ci_95 %>% 
+kick_ci_95 %>%
   kbl() %>%
   kable_classic(full_width = F, html_font = "Georgia")
 ```
@@ -421,7 +412,7 @@ team_results <- matches %>%
     no_matches = sum(draw, lost, won),
     win_rate = won / no_matches
   )
-  
+
 # Get Kick Rate
 team_kicks <- matches %>%
   group_by(team, kicks) %>%
@@ -436,12 +427,10 @@ team_kicks <- matches %>%
   ) %>%
   arrange(desc(kick_rate))
 
-# Create Table 
+# Create Table
 team_rates <- team_results %>%
   left_join(team_kicks) %>%
   arrange(desc(kick_rate, win_rate))
-
-
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -450,16 +439,17 @@ team_rates %>%
   aes(x = kick_rate, y = win_rate) +
   geom_point() +
   geom_smooth(method = lm, se = FALSE) +
-  labs(title = paste("Pearson Correlation =", round(cor(team_rates$kick_rate, team_rates$win_rate), 4)),
-       x = "Kick Rate",
-       y = "Win Rate") +
-   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = paste("Pearson Correlation =", round(cor(team_rates$kick_rate, team_rates$win_rate), 4)),
+    x = "Kick Rate",
+    y = "Win Rate"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
-  theme_minimal() + 
+  theme_minimal() +
   theme(text = element_text(family = "Georgia"))
 
 cor <- round(cor(team_rates$kick_rate, team_rates$win_rate), 4)
-
 ```
 
 <br>
@@ -478,7 +468,6 @@ avg_kicks <- matches %>%
 
 team_kicks <- team_results %>%
   left_join(avg_kicks)
-
 ```
 
 <br> 
@@ -489,16 +478,16 @@ team_kicks %>%
   ungroup() %>%
   mutate(rank = rank(-avg._no._kicks_per_game, ties.method = "first"), .before = team) %>%
   slice_max(avg._no._kicks_per_game, n = 10, with_ties = F) %>%
-  select(-no_matches) %>% 
-  relocate(avg._no._kicks_per_game, .after = team) %>% 
-  mutate(team = str_replace_all(team,"_", " ")) %>% 
-  mutate(team = str_to_title(team))%>% 
-  mutate(win_rate = paste(round(win_rate * 100, 2), "%", sep = ""))  %>% 
-  mutate(avg._no._kicks_per_game = round(avg._no._kicks_per_game, 2)) %>% 
- rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
- kbl() %>%
-  kable_classic(full_width = T, html_font =  "Georgia")
+  select(-no_matches) %>%
+  relocate(avg._no._kicks_per_game, .after = team) %>%
+  mutate(team = str_replace_all(team, "_", " ")) %>%
+  mutate(team = str_to_title(team)) %>%
+  mutate(win_rate = paste(round(win_rate * 100, 2), "%", sep = "")) %>%
+  mutate(avg._no._kicks_per_game = round(avg._no._kicks_per_game, 2)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
+  kbl() %>%
+  kable_classic(full_width = T, html_font = "Georgia")
 ```
 
 Looking at the top ten teams, there is no pattern between those with the higher average number of kicks and win rate. Four of the top ten are international teams, showing that kicking is more prevalent in the international game.
@@ -509,13 +498,13 @@ The split can be shown as follows:
 <br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-matches %>% 
-  group_by(type_of_team) %>%  
-  summarise(avg._no._kicks_per_games = round(mean(kicks_from_hand), 2)) %>% 
-  mutate(type_of_team = str_to_title(type_of_team)) %>% 
-rename_all( ~ str_replace_all(., "_", " ")) %>% 
-    rename_all( ~ str_to_title(.))   %>% 
- kbl() %>%
+matches %>%
+  group_by(type_of_team) %>%
+  summarise(avg._no._kicks_per_games = round(mean(kicks_from_hand), 2)) %>%
+  mutate(type_of_team = str_to_title(type_of_team)) %>%
+  rename_all(~ str_replace_all(., "_", " ")) %>%
+  rename_all(~ str_to_title(.)) %>%
+  kbl() %>%
   kable_classic(full_width = F, html_font = "Georgia")
 ```
 
@@ -531,15 +520,15 @@ team_kicks %>%
   ggplot() +
   aes(x = avg._no._kicks_per_game, y = win_rate) +
   geom_point() +
- geom_smooth(method = lm, se = FALSE) +
-  labs(title = paste("Pearson Correlation =", round(cor(team_kicks$avg._no._kicks_per_game, team_kicks$win_rate), 4)),
-       x = "Avg. No. Kicks Per Game",
-       y = "Win Rate") +
-   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_smooth(method = lm, se = FALSE) +
+  labs(
+    title = paste("Pearson Correlation =", round(cor(team_kicks$avg._no._kicks_per_game, team_kicks$win_rate), 4)),
+    x = "Avg. No. Kicks Per Game",
+    y = "Win Rate"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme_minimal() +
   theme(text = element_text(family = "Georgia"))
-
-
 ```
 
 
@@ -557,8 +546,8 @@ As the data is more complete when looking at international matches, this explora
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 data <- team_data %>%
-  pivot_wider(names_from = stat, values_from = values) %>% 
-  rowwise %>% 
+  pivot_wider(names_from = stat, values_from = values) %>%
+  rowwise() %>%
   mutate(penalty_goal_attempts = penalty_goal_successful + penalty_missed)
 ```
 
@@ -568,23 +557,24 @@ Below is a graph showing which other variables correlate with `Kicks From Hand`:
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-data %>% 
-      filter(type_of_team == "international") %>% 
-  select(-match_id:-team, - type_of_team) %>% 
-  correlate() %>% 
-  focus(kicks_from_hand) %>% 
-   mutate(across(where(is.character), ~ str_replace_all(., "_", " "))) %>% 
-   mutate(across(where(is.character), ~ str_to_title(.))) %>% 
-  ggplot()+
+data %>%
+  filter(type_of_team == "international") %>%
+  select(-match_id:-team, -type_of_team) %>%
+  correlate() %>%
+  focus(kicks_from_hand) %>%
+  mutate(across(where(is.character), ~ str_replace_all(., "_", " "))) %>%
+  mutate(across(where(is.character), ~ str_to_title(.))) %>%
+  ggplot() +
   aes(x = reorder(term, kicks_from_hand), y = kicks_from_hand, fill = kicks_from_hand > 0) +
   geom_col(show.legend = FALSE) +
   coord_flip() +
-  labs(title = "Other Variables vs. Kicks From Hand",
-       x = "Variable",
-       y = "Correlation with Kicks From Hand") + 
+  labs(
+    title = "Other Variables vs. Kicks From Hand",
+    x = "Variable",
+    y = "Correlation with Kicks From Hand"
+  ) +
   theme_minimal() +
   theme(text = element_text(family = "Georgia"))
-
 ```
 
 <br> 
@@ -600,19 +590,17 @@ Unfortunately the data variables are not suited to make an accurate model to exp
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 
-major <- data %>% 
- filter(competition %in% c("six_nations", "the_rugby_championship")) %>% 
-  distinct(team) %>% 
+major <- data %>%
+  filter(competition %in% c("six_nations", "the_rugby_championship")) %>%
+  distinct(team) %>%
   pull()
 
 model_data <- data %>%
-      filter(type_of_team == "international") %>% 
-  mutate(team = if_else(!team %in% major, "minor_nation", team)) %>% 
-  select(-competition, -date,  -lineout_throw_won_clean ,- type_of_team, - match, -penalty_goal_attempts, -try_assist, -red_card, -yellow_card, - hemisphere) %>% 
-  mutate(across(where(is_character), ~ as_factor(.))) %>% 
-  mutate(year= as.factor(year))  
-
-
+  filter(type_of_team == "international") %>%
+  mutate(team = if_else(!team %in% major, "minor_nation", team)) %>%
+  select(-competition, -date, -lineout_throw_won_clean, -type_of_team, -match, -penalty_goal_attempts, -try_assist, -red_card, -yellow_card, -hemisphere) %>%
+  mutate(across(where(is_character), ~ as_factor(.))) %>%
+  mutate(year = as.factor(year))
 ```
 
 
@@ -652,7 +640,7 @@ mod1a has the highest r^2 so that will be used.
 ```{r}
 mod2a <- lm(kicks_from_hand ~ team + penalty_goal_successful, data = model_data)
 
-autoplot(mod2a)+
+autoplot(mod2a) +
   theme(text = element_text(family = "Georgia"))
 
 summary(mod2a)
@@ -664,7 +652,7 @@ summary(mod2a)
 ```{r}
 mod2b <- lm(kicks_from_hand ~ team + year, data = model_data)
 
-autoplot(mod2b)+
+autoplot(mod2b) +
   theme(text = element_text(family = "Georgia"))
 
 summary(mod2b)
@@ -677,16 +665,16 @@ mod2a has the highest r^2 so is the best option
 ```{r}
 mod3a <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw, data = model_data)
 
-autoplot(mod3a)+
+autoplot(mod3a) +
   theme(text = element_text(family = "Georgia"))
 
 summary(mod3a)
 ```
 
 ```{r}
-mod3b <- lm(kicks_from_hand~ team + penalty_goal_successful+total_turnovers_gained , data = model_data)
+mod3b <- lm(kicks_from_hand ~ team + penalty_goal_successful + total_turnovers_gained, data = model_data)
 
-autoplot(mod3b)+
+autoplot(mod3b) +
   theme(text = element_text(family = "Georgia"))
 
 summary(mod3b)
@@ -697,13 +685,13 @@ mod3a  has the highest r^2 is the better model going forward.
 
 
 ```{r}
-mod4a <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw  + line_break, data = model_data)
+mod4a <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + line_break, data = model_data)
 
 summary(mod4a)
 ```
 
 ```{r}
-mod4b <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw  + total_turnovers_gained, data = model_data)
+mod4b <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + total_turnovers_gained, data = model_data)
 
 summary(mod4b)
 ```
@@ -714,12 +702,10 @@ summary(mod4b)
 ```{r}
 mod4c <- lm(kicks_from_hand ~ team + penalty_goal_successful + lineout_won_own_throw + lineout_won_steal, data = model_data)
 
-autoplot(mod4c)+
+autoplot(mod4c) +
   theme(text = element_text(family = "Georgia"))
 
 summary(mod4c)
-
-
 ```
 
 
@@ -782,6 +768,3 @@ This dataset has led to some useful insights, but fails to explain the links bet
 <br>
 
 # References
-
-
-
