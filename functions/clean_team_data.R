@@ -50,35 +50,27 @@ clean_team_data <- function(){
                               "vs",
                               str_extract(match, "(?<=vs_)[a-z0-9]{2}"),
                               sep = "")
-             , .before = competition)  %>% 
-      mutate(match_id = if_else(home_away == "home", 
-                                paste("h", match_id,  sep = ""),
-                                paste("a",match_id,  sep = "")))
+             , .before = competition) 
     
     
     complete_data <- bind_rows(complete_data, part_data)
 
   }
   
- matches <- complete_data %>% 
-    select(match_id:team) %>% 
-    distinct(match_id, .keep_all = T)
- 
-team_data <-  complete_data %>% 
-  select(match_id, stat, values) %>% 
-  pivot_wider(names_from = stat, values_from = values)
+  dir.create("5_clean_data")
+  if (file.exists("5_clean_data/team_data.csv")) {
+  read_csv("5_clean_data/team_data.csv",
+           col_types =
+             cols(
+               season = "c"
+             )) %>% 
+    bind_rows(complete_data) %>% 
+    arrange(date, match) %>% 
+    write_csv("5_clean_data/team_data.csv")
+    } else {
+  complete_data %>% 
+    write_csv("5_clean_data/team_data.csv")
+      }
+  unlink("3_raw_data/team_data/", recursive = TRUE)
 
-dir.create("5_clean_data")
-dir.create("5_clean_data/sql")
-
-
-
-complete_data %>% 
-  write_csv("5_clean_data/team_data.csv")
-
-team_data %>% 
-  write_csv("5_clean_data/sql/team_data.csv")
-
-matches %>% 
-  write_csv("5_clean_data/sql/match_data.csv")
 }

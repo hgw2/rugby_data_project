@@ -20,7 +20,7 @@ six_nations <- get_match_links(six_nations)
 
 links <- c(links, six_nations)
 
-# rugby championship
+ #rugby championship
 rugby_championship <- "https://www.rugbypass.com/the-rugby-championship/matches/"
 
 rugby_championship <- get_match_links(rugby_championship)

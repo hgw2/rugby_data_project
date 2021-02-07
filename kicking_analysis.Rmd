@@ -43,7 +43,7 @@ library(showtext)
 ```{r message=FALSE, warning=FALSE, include=FALSE}
  #source("1_get_data/get_data.R")
 
-number_matches <- length(list.files("3_raw_data/team_data/"))
+
 
 
 international <- c(
@@ -76,7 +76,10 @@ team_data <- read_csv("5_clean_data/team_data.csv",
     competition%in% c("internationals", "rugby_world_cup") ~ "mixed",
     TRUE ~ "southern"), .after = competition
   )
-  
+
+number_matches <- team_data %>% 
+  distinct(match_id) %>% 
+  nrow()
 ```
 
 ```{r Get number of wins and kicks, message=FALSE, warning=FALSE, include=FALSE}
@@ -567,7 +570,7 @@ Below is a graph showing which other variables correlate with `Kicks From Hand`:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 data %>% 
       filter(type_of_team == "international") %>% 
-  select(-competition:-team, - type_of_team) %>% 
+  select(-match_id:-team, - type_of_team) %>% 
   correlate() %>% 
   focus(kicks_from_hand) %>% 
    mutate(across(where(is.character), ~ str_replace_all(., "_", " "))) %>% 

@@ -60,6 +60,19 @@ files <- c()
 
   dir.create("5_clean_data")
 
-  complete_data %>%
-    write_csv("5_clean_data/player_data.csv")
+  if (file.exists("5_clean_data/player_data.csv")) {
+    read_csv("5_clean_data/player_data.csv",
+             col_types =
+               cols(
+                 season = "c"
+               ) ) %>% 
+      bind_rows(complete_data) %>% 
+      arrange(date, match) %>% 
+      write_csv("5_clean_data/player_data.csv")
+  } else {
+    complete_data %>% 
+      write_csv("5_clean_data/player_data.csv")
+    
+  }
+  unlink("3_raw_data/player_data/", recursive = TRUE)  
 }
