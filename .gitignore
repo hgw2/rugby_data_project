@@ -224,6 +224,7 @@ vignettes/*.pdf
 *.knit.md
 glmulti_analysis.*
 Untitled.*
+*.RData
 
 # R Environment Variables
 .Renviron
