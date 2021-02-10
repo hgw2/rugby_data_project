@@ -1,4 +1,4 @@
-get_match_links <- function(webpage){
+get_rugby_pass_links <- function(webpage){
   
   webpages <- read_html(webpage)
   

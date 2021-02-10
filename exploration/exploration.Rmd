@@ -1,0 +1,56 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(cronR)
+source("../functions/get_player_info.R")
+```
+
+
+
+```{r}
+
+get_player_info("http://en.espn.co.uk/scrum/rugby/player/158721.html")
+
+
+```
+```{r}
+
+```
+
+
+```{r}
+get_espn_links("http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1")
+```
+
+
+```{r}
+get_cap_no("http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1")
+```
+
+
+```{r}
+
+england <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1"
+
+england_caps <- get_cap_no(england)
+
+england <- get_espn_links(england)
+
+links <- c(links, england)
+
+full_links <- unique(links)
+
+full_links
+#get_espn_data(full_links)
+```
+
+
