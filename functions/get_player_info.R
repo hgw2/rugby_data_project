@@ -46,6 +46,15 @@ get_player_info <- function(website){
   birth_location <- str_trim(str_extract(info[2], "[^,0-9)][A-z-& ]*[ A-z'-.?&]+$"))
  
    teams <- str_trim(str_extract(info[4], "(?<=Major teams) [A-z0-9-, ]+"))
+   
+   teams <- str_split(teams, ", ") %>% 
+     unlist() %>% 
+     as_tibble()
+   
+   teams <- teams %>% 
+     filter(!str_detect(value, "Scot|Brit|Engl|Barb|Ital|Ire|Wal|Aus|Fra|Zeal|Fiji|Georg|Argent|South Africa")) %>% 
+     pull() %>% 
+     paste(collapse = ", ")
   
   position <- str_trim(str_extract(info[5], "(?<=Position) [A-z- ]+"))
   
