@@ -10,39 +10,41 @@ links <- c()
 
 england <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1"
 
-england_caps <- get_cap_no(england, "England")
 
-england <- get_espn_links(england)
+scrape_espn_data(england, "england")
 
-
-links <- c(links, england)
 
 # Scotland
 
 scotland <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=2"
 
-scotland_caps <- get_cap_no(scotland, "Scotland")
+scrape_espn_data(scotland, "scotland")
 
-scotland <- get_espn_links(scotland)
+# Ireland 
+ireland<- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=3"
 
-links <- c(links, scotland)
+scrape_espn_data(ireland, "ireland")
+
+# wales
+wales <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=4"
+
+scrape_espn_data(wales, "wales")
 
 
+# South Africa
+#south_africa <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=5"
 
-full_links <- unique(links)
+#scrape_espn_data(south_africa, "south_africa")
 
-if(file.exists("2_scrape_data/espn_old_links.RData")){
-  load("2_scrape_data/espn_old_links.RData")
-  
-  links <- setdiff(full_links, old_links)
-  
-} else{
-  links <- full_links
-  
-}
+# Australia
+#australia <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=6"
 
-get_espn_data(links)
+#scrape_espn_data(australia, "australia")
 
-old_links <- full_links
+# France
+france <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=9"
 
-save(old_links, file = "2_scrape_data/espn_old_links.RData")
+scrape_espn_data(france, "france")
+
+italy <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=20"
+scrape_espn_data(italy, "italy")

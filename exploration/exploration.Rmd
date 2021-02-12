@@ -18,39 +18,15 @@ source("../functions/get_player_info.R")
 
 ```{r}
 
-get_player_info("http://en.espn.co.uk/scrum/rugby/player/158721.html")
-
-
+country = "england"
+file_path <- paste("../3_raw_data/cap_nos/", country, ".csv", sep = "")
+    cap_nos <-read_csv(file_path) 
+    
 ```
 ```{r}
-
+teams
 ```
 
 
-```{r}
-get_espn_links("http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1")
-```
-
-
-```{r}
-get_cap_no("http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1")
-```
-
-
-```{r}
-
-england <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=1"
-
-england_caps <- get_cap_no(england)
-
-england <- get_espn_links(england)
-
-links <- c(links, england)
-
-full_links <- unique(links)
-
-full_links
-#get_espn_data(full_links)
-```
 
 
