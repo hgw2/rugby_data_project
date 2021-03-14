@@ -77,7 +77,7 @@ get_player_info <- function(website) {
       pull() %>%
       paste(collapse = ", ")
 
-    position <- str_trim(str_extract(info[5], "(?<=Position) [A-z0-9- ]+"))
+    position <- str_trim(str_extract(info[5], "(?<=Position) [A-z0-9-. ]+"))
 
     height <- str_trim(str_extract(info[6], "(?<=Height) [A-z 0-9 ]+"))
 

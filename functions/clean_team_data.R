@@ -3,8 +3,8 @@ clean_team_data <- function(){
   files <- c()
   
   
-  for (file in list.files("3_raw_data/team_data/")) {
-    file_path <- paste("3_raw_data/team_data/", file, sep = "")
+  for (file in list.files("~/rugby_data_project/3_raw_data/team_data/")) {
+    file_path <- paste("~/rugby_data_project/3_raw_data/team_data/", file, sep = "")
     files <- c(files, file_path)
   }
   
@@ -57,20 +57,20 @@ clean_team_data <- function(){
 
   }
   
-  dir.create("5_clean_data")
-  if (file.exists("5_clean_data/team_data.csv")) {
-  read_csv("5_clean_data/team_data.csv",
+  dir.create("~/rugby_data_project/5_clean_data")
+  if (file.exists("~/rugby_data_project/5_clean_data/team_data.csv")) {
+  read_csv("~/rugby_data_project/5_clean_data/team_data.csv",
            col_types =
              cols(
                season = "c"
              )) %>% 
     bind_rows(complete_data) %>% 
     arrange(date, match) %>% 
-    write_csv("5_clean_data/team_data.csv")
+    write_csv("~/rugby_data_project/5_clean_data/team_data.csv")
     } else {
   complete_data %>% 
-    write_csv("5_clean_data/team_data.csv")
+    write_csv("~/rugby_data_project/5_clean_data/team_data.csv")
       }
-  unlink("3_raw_data/team_data/", recursive = TRUE)
+  unlink("~/rugby_data_project/3_raw_data/team_data/", recursive = TRUE)
 
 }

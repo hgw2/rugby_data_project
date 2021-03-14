@@ -16,7 +16,7 @@ get_espn_links <- function(webpage, country){
     player_links <- c(player_links, full)
   }
   
-  file_path <- paste("2_scrape_data/", country,"_links", ".RData", sep = "")
+  file_path <- paste("~/rugby_data_project/2_scrape_data/", country,"_links", ".RData", sep = "")
   file_name <- paste(country,"_links",  sep = "")
   
   if(file.exists(file_path)){

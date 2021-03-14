@@ -9,8 +9,8 @@ scrape_rugby_pass_data <- function(urls) {
     tryCatch({
 
     # Create temp directory for overall stats
-    dir.create("2_data/temp_player")
-    dir.create("2_data/temp_team")
+    dir.create("~/rugby_data_project/2_data/temp_player")
+    dir.create("~/rugby_data_project/2_data/temp_team")
 
     # Create tournament directory
     
@@ -23,18 +23,18 @@ scrape_rugby_pass_data <- function(urls) {
      str_remove_all("[0-9]+/")
    
     
-   tournament_dir_path <- paste("2_data/", tournament, sep = "")
+   tournament_dir_path <- paste("~/rugby_data_project/2_data/", tournament, sep = "")
     dir.create(tournament_dir_path)
     
-    season_dir_path <- paste("2_data/", tournament, "/", season, sep = "")
+    season_dir_path <- paste("~/rugby_data_project/2_data/", tournament, "/", season, sep = "")
     dir.create(season_dir_path)
 
     # Create tournament temp folder team and player for overall tournament stats
-    tournament_temp_player_dir_path <- paste("2_data/", tournament, "/temp_player", sep = "")
+    tournament_temp_player_dir_path <- paste("~/rugby_data_project/2_data/", tournament, "/temp_player", sep = "")
     dir.create(tournament_temp_player_dir_path)
 
 
-    tournament_temp_team_dir_path <- paste("2_data/", tournament, "/temp_team", sep = "")
+    tournament_temp_team_dir_path <- paste("~/rugby_data_project/2_data/", tournament, "/temp_team", sep = "")
     dir.create(tournament_temp_team_dir_path)
 
     # get match and date from url
@@ -52,7 +52,7 @@ scrape_rugby_pass_data <- function(urls) {
 
 
     # create match directories
-    match_dir_path <- paste("2_data/", tournament, "/", season, "/", date_match, sep = "")
+    match_dir_path <- paste("~/rugby_data_project/2_data/", tournament, "/", season, "/", date_match, sep = "")
    
     dir.create(match_dir_path)
  
@@ -82,8 +82,8 @@ scrape_rugby_pass_data <- function(urls) {
         season = season, .after = competition)
       
 
-    player_csv_path <- paste("2_data/", tournament, "/", season, "/", date_match,"/", date_match, "_player_stats.csv", sep = "")
-    team_csv_path <- paste("2_data/", tournament, "/", season, "/", date_match, "/", date_match, "_team_stats.csv", sep = "")
+    player_csv_path <- paste("~/rugby_data_project/2_data/", tournament, "/", season, "/", date_match,"/", date_match, "_player_stats.csv", sep = "")
+    team_csv_path <- paste("~/rugby_data_project/2_data/", tournament, "/", season, "/", date_match, "/", date_match, "_team_stats.csv", sep = "")
 
     full_table <- home_table %>%
       bind_rows(away_table)
@@ -98,8 +98,8 @@ scrape_rugby_pass_data <- function(urls) {
     
     away_team <- get_team(away_table)
     
-    away_file_path <- paste("2_data/", tournament, "/temp_player/", match_date, "_", away_team, ".csv", sep = "")
-    temp_away_file_path <- paste("2_data/temp_player/", match_date, "_", away_team, ".csv", sep = "")
+    away_file_path <- paste("~/rugby_data_project/2_data/", tournament, "/temp_player/", match_date, "_", away_team, ".csv", sep = "")
+    temp_away_file_path <- paste("~/rugby_data_project/2_data/temp_player/", match_date, "_", away_team, ".csv", sep = "")
     
     away_table %>%
       write_csv(away_file_path) %>%
@@ -137,8 +137,8 @@ scrape_rugby_pass_data <- function(urls) {
 
 
 
-    team_file_path <- paste("2_data/", tournament, "/temp_team/", date_match, ".csv", sep = "")
-    temp_team_file_path <- paste("2_data/temp_team/", date_match, ".csv", sep = "")
+    team_file_path <- paste("~/rugby_data_project/2_data/", tournament, "/temp_team/", date_match, ".csv", sep = "")
+    temp_team_file_path <- paste("~/rugby_data_project/2_data/temp_team/", date_match, ".csv", sep = "")
 
     full_team_stats %>%
       write_csv(team_file_path) %>%

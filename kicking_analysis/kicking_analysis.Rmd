@@ -36,6 +36,7 @@ library(knitr)
 library(kableExtra)
 library(extrafont)
 library(showtext)
+library(plotly)
 ```
 
 
@@ -62,7 +63,7 @@ showtext_auto(F)
 
 
 ```{r Load Data, message=FALSE, warning=FALSE, include=FALSE}
-team_data <- read_csv("5_clean_data/team_data.csv",
+team_data <- read_csv("../5_clean_data/team_data.csv",
   col_types =
     cols(
       season = "c"

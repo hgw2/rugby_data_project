@@ -1,9 +1,9 @@
 scrape_rugby_pass_data1 <- function(urls) {
 
   # Create temp directory for overall stats
-  dir.create("3_raw_data")
-  dir.create("3_raw_data/player_data")
-  dir.create("3_raw_data/team_data")
+  dir.create("~/rugby_data_project/3_raw_data")
+  dir.create("~/rugby_data_project/3_raw_data/player_data")
+  dir.create("~/rugby_data_project/3_raw_data/team_data")
   for (webpage in urls) {
     
     skip_to_next <- FALSE

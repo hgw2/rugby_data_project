@@ -11,22 +11,40 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 library(tidyverse)
 library(rvest)
 library(cronR)
-source("../functions/get_player_info.R")
+library(janitor)
+
 ```
 
 
 
 ```{r}
 
-country = "england"
-file_path <- paste("../3_raw_data/cap_nos/", country, ".csv", sep = "")
-    cap_nos <-read_csv(file_path) 
-    
+login<-"https://fantasy.sixnationsrugby.com/#/welcome/login"
+ 
+
+read_html(login) %>% 
+  
+
+
+
+
 ```
 ```{r}
-teams
+
 ```
 
 
-
-
+```{r}
+full_player_info %>% 
+  filter(!is.na(height))
+```
+```{r}
+ full_player_info %>% 
+  mutate(clubs_1 = coalesce("No club")) %>% 
+  pivot_longer(cols = clubs_1 : rev(names(full_player_info))[1],
+              names_to = "club_no",
+               values_to = "club") %>% 
+  drop_na(club) %>% 
+  mutate(club_no = str_remove(club_no, "clubs_"))
+ 
+```

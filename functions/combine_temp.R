@@ -1,8 +1,8 @@
 combine_temp <- function(country){
   files <- c()
   
-  for (file in list.files("3_raw_data/temp/")) {
-    file_path <- paste("3_raw_data/temp/", file, sep = "")
+  for (file in list.files("~/rugby_data_project/3_raw_data/temp/")) {
+    file_path <- paste("~/rugby_data_project/3_raw_data/temp/", file, sep = "")
     files <- c(files, file_path)
   }
   
@@ -18,7 +18,7 @@ combine_temp <- function(country){
   
   
   
-  file_path <-paste("3_raw_data/espn/", country, ".csv", sep = "")
+  file_path <-paste("~/rugby_data_project/3_raw_data/espn/", country, ".csv", sep = "")
   
   if (is_null(complete_data)){
     
@@ -28,5 +28,5 @@ combine_temp <- function(country){
   }
   
 
-unlink("3_raw_data/temp/", recursive = TRUE) 
+unlink("~/rugby_data_project/3_raw_data/temp/", recursive = TRUE) 
 }

@@ -32,14 +32,14 @@ scrape_espn_data(wales, "wales")
 
 
 # South Africa
-#south_africa <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=5"
+south_africa <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=5"
 
-#scrape_espn_data(south_africa, "south_africa")
+scrape_espn_data(south_africa, "south_africa")
 
 # Australia
-#australia <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=6"
+australia <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=6"
 
-#scrape_espn_data(australia, "australia")
+scrape_espn_data(australia, "australia")
 
 # France
 france <- "http://en.espn.co.uk/scrum/rugby/player/caps.html?team=9"

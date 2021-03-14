@@ -1,6 +1,6 @@
 get_cap_no <- function(webpage, country){
   
-  dir.create("3_raw_data/cap_nos/")
+  dir.create("~/rugby_data_project/3_raw_data/cap_nos/")
 
   webpage <- read_html(webpage)
   cap_nos <- webpage %>% 
@@ -29,7 +29,7 @@ get_cap_no <- function(webpage, country){
   
 
  
- file_path <- paste("3_raw_data/cap_nos/", country, ".csv", sep = "")
+ file_path <- paste("~/rugby_data_project/3_raw_data/cap_nos/", country, ".csv", sep = "")
  
  cap_nos%>% 
    write_csv(file_path)

@@ -142,8 +142,8 @@ full_links <- tibble(
   filter(date < Sys.Date()) %>% # remove future dates 
   pull(link)
 
-if(file.exists("2_scrape_data/old_links.RData")){
-  load("2_scrape_data/old_links.RData")
+if(file.exists("~/rugby_data_project/2_scrape_data/old_links.RData")){
+  load("~/rugby_data_project/2_scrape_data/old_links.RData")
  
   links <- setdiff(full_links, old_links)
   
@@ -155,4 +155,4 @@ scrape_rugby_pass_data1(links)
 
  old_links <- full_links
  
-  save(old_links, file = "2_scrape_data/old_links.RData")
+  save(old_links, file = "~/rugby_data_project/2_scrape_data/old_links.RData")
