@@ -20,7 +20,7 @@ files <- c()
 
     part_data <- part_data %>% 
       group_by(date, match) %>% 
-      mutate(home_away = if_else(row_number() == 1, "home", "away"), .after = match) %>% 
+      mutate(home_away = if_else(row_number() %in% 1:23, "home", "away"), .after = match) %>% 
       ungroup() %>% 
       pivot_longer(names, names_to = "stat", values_to = "values") %>%
       mutate(season = as.character(season)) %>%
