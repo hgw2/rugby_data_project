@@ -26,6 +26,7 @@ Created by https://www.toptal.com/developers/gitignore/api/r,windows,macos,linux
 Icon
 
 *.csv
+*.parquet
 # Thumbnails
 ._*
 
