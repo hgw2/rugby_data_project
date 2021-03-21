@@ -1,50 +1,63 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 ```{r}
 library(tidyverse)
-library(rvest)
-library(cronR)
-library(janitor)
+library(here)
 
+international <- c(
+  "australia",
+  "new_zealand",
+  "england",
+  "south_africa",
+  "ireland",
+  "italy",
+  "japan",
+  "scotland",
+  "wales",
+  "france",
+  "argentina",
+  "georgia",
+  "fiji",
+  "romania",
+  "usa",
+  "tonga",
+  "russia",
+  "namibia",
+  "samoa",
+  "uruguay",
+  "canada"
+)
 ```
 
-
-
 ```{r}
+team_table <- read_csv(here("5_clean_data/team_data.csv")) %>%
+  pivot_wider(names_from = stat, values_from = values) %>%
+  select(-match_id) %>%
+  mutate(
+    type_of_team = if_else(team %in% international,
+      "international", "club"
+    ),
+    .after = team
+  ) %>%
+  mutate(
+    hemisphere = case_when(
+      competition %in% c(
+        "autumn_nations_cup",
+        "european_champions_cup",
+        "premiership",
+        "premiership_cup",
+        "pro_14", "six_nations",
+        "top_14"
+      ) ~ "northern",
+      competition %in% c(
+        "internationals",
+        "rugby_world_cup"
+      ) ~ "mixed",
+      TRUE ~ "southern"
+    ),
+    .after = competition
+  )
+international_team_matches <- team_table %>% 
+  filter(type_of_team == "international")
 
-login<-"https://fantasy.sixnationsrugby.com/#/welcome/login"
- 
-
-read_html(login) %>% 
-  
-
-
-
-
-```
-```{r}
-
-```
-
-
-```{r}
-full_player_info %>% 
-  filter(!is.na(height))
-```
-```{r}
- full_player_info %>% 
-  mutate(clubs_1 = coalesce("No club")) %>% 
-  pivot_longer(cols = clubs_1 : rev(names(full_player_info))[1],
-              names_to = "club_no",
-               values_to = "club") %>% 
-  drop_na(club) %>% 
-  mutate(club_no = str_remove(club_no, "clubs_"))
- 
+club_team_matches <- team_table %>% 
+  filter(type_of_team == "club")
 ```
