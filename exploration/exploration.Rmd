@@ -1,50 +1,15 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 ```{r}
-library(tidyverse)
-library(rvest)
-library(cronR)
-library(janitor)
+ a <- read_parquet("../5_clean_data/20210321/20210321_team_data.parquet") %>% 
+  pivot_wider(names_from = stat, values_from = values)
+b <- read_parquet("../5_clean_data/20210321_team_data.parquet")
 
+ c <- read_parquet("../5_clean_data/20210321/20210321_player_data.parquet") %>% 
+  pivot_wider(names_from = stat, values_from = values)
+d <- read_parquet("../5_clean_data/20210321_player_data.parquet")
+
+team <- a %>% 
+  anti_join(b, by = c("match", "season")) 
+team <- c %>% 
+  anti_join(d, by = c("match", "season")) 
 ```
 
-
-
-```{r}
-
-login<-"https://fantasy.sixnationsrugby.com/#/welcome/login"
- 
-
-read_html(login) %>% 
-  
-
-
-
-
-```
-```{r}
-
-```
-
-
-```{r}
-full_player_info %>% 
-  filter(!is.na(height))
-```
-```{r}
- full_player_info %>% 
-  mutate(clubs_1 = coalesce("No club")) %>% 
-  pivot_longer(cols = clubs_1 : rev(names(full_player_info))[1],
-              names_to = "club_no",
-               values_to = "club") %>% 
-  drop_na(club) %>% 
-  mutate(club_no = str_remove(club_no, "clubs_"))
- 
-```

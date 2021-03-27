@@ -1,15 +1,15 @@
 clean_player_data <- function() {
   files <- c()
 
-  for (file in list.files(paste("~/rugby_data_project/3_raw_data/", format(Sys.Date(), "%Y%m%d"), "/player_data", sep = ""))) {
-    file_path <- paste("~/rugby_data_project/3_raw_data/", format(Sys.Date(), "%Y%m%d"), "/player_data/", file, sep = "")
+  for (file in list.files(paste("~/rugby_data_project/3_raw_data/", date, "/player_data", sep = ""))) {
+    file_path <- paste("~/rugby_data_project/3_raw_data/", date, "/player_data/", file, sep = "")
     files <- c(files, file_path)
   }
 
   complete_data <- NULL
 
   for (file in files) {
-    part_data <- read_csv(file) %>%
+    part_data <- read_csv(file, col_types = cols(date = "D", position = "c")) %>%
       distinct(player, .keep_all = TRUE)
 
 
@@ -42,6 +42,7 @@ clean_player_data <- function() {
         "yellow_cards" = "yellow_card",
         .default = stat
       )) %>%
+      mutate(values = as.double(values)) %>% 
       mutate(team = str_to_lower(team)) %>%
       mutate(team = str_replace(team, " ", "_")) %>%
       mutate(
@@ -82,8 +83,8 @@ clean_player_data <- function() {
   }
 
   dir.create("~/rugby_data_project/5_clean_data")
-  dir.create(paste("~/rugby_data_project/5_clean_data/", format(Sys.Date(), "%Y%m%d"), sep = ""))
+  dir.create(paste("~/rugby_data_project/5_clean_data/", date, sep = ""))
 
   complete_data %>%
-    write_parquet(paste("~/rugby_data_project/5_clean_data/", format(Sys.Date(), "%Y%m%d"), "/", format(Sys.Date(), "%Y%m%d"), "_player_data.parquet", sep = ""))
+    write_parquet(paste("~/rugby_data_project/5_clean_data/", date, "/", date, "_player_data.parquet", sep = ""))
 }

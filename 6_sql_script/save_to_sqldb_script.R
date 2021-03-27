@@ -13,8 +13,8 @@ db_connection = dbConnect(
   options="-c search_path=staging"
 )
 
-<<<<<<< HEAD
-dbGetQuery(db_connection, statement = "drop TABLE if exists staging.team;")
+
+dbGetQuery(db_connection, statement = "drop table if exists staging.team;")
 
 dbGetQuery(db_connection, statement = "create table staging.team
 (
@@ -60,7 +60,8 @@ dbGetQuery(db_connection, statement = "create table staging.team
     scrum_lost               int
 );
 ")
-team_data <- read_parquet(paste("~/rugby_data_project/5_clean_data/", format(Sys.Date(), "%Y%m%d"), "/", format(Sys.Date(), "%Y%m%d"), "_team_data.parquet", sep = ""))
+team_data <- read_parquet(paste("~/rugby_data_project/5_clean_data/", date, "/", date, "_team_data.parquet", sep = "")) %>% 
+  pivot_wider(names_from = stat, values_from = values)
 dbWriteTable(db_connection, "team", team_data, append = TRUE, row.names = FALSE)
 
 dbGetQuery(db_connection, statement = "drop TABLE if exists staging.player;")      
@@ -102,26 +103,9 @@ dbGetQuery(db_connection, statement = "create table staging.player
 );
 ")
            
-player_data <- read_parquet(paste("~/rugby_data_project/5_clean_data/", format(Sys.Date(), "%Y%m%d"), "/", format(Sys.Date(), "%Y%m%d"), "_player_data.parquet", sep = ""))
+player_data <- read_parquet(paste("~/rugby_data_project/5_clean_data/", date, "/", date, "_player_data.parquet", sep = "")) %>% 
+  pivot_wider(names_from = stat, values_from = values)
 dbWriteTable(db_connection, "player", player_data, append = TRUE, row.names = FALSE)
-=======
-if (dbExistsTable(db_connection, "matches"))
-  dbRemoveTable(db_connection, "matches")
 
-if (dbExistsTable(db_connection, "team_stats"))
-  dbRemoveTable(db_connection, "team_stats")
-
-match_data <- read_csv("5_clean_data/sql/match_data.csv")
-dbWriteTable(db_connection, name = "matches", value = match_data, row.names = FALSE)
-
-team_data <- read_csv("5_clean_data/sql/team_data.csv")
-dbWriteTable(db_connection, name = "team_stats", value = team_data, row.names = FALSE)
-
-dbGetQuery(db_connection, statement = "ALTER TABLE matches 
-           ADD PRIMARY KEY (match_id);")
-
-dbGetQuery(db_connection, statement = "ALTER TABLE team_stats
-           ADD FOREIGN KEY (match_id) REFERENCES matches(match_id);")
->>>>>>> parent of 22971ce (added SQL script)
 
 dbDisconnect(db_connection)

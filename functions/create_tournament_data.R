@@ -75,18 +75,18 @@ scrape_rugby_pass_data1 <- function(urls) {
     
 
   
-    temp_home_file_path <- paste("3_raw_data/player_data/", format(Sys.Date(), "%Y%m%d"),"/", match_date, "_", home_team,  ".parquet", sep = "")
+    temp_home_file_path <-paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/player_data/", match_date, "_", home_team,  ".csv", sep = "")
     
     home_table %>%
-      write_parquet(temp_home_file_path)
+      write_csv(temp_home_file_path)
     
     
   
-    temp_away_file_path <- paste("3_raw_data/player_data/",format(Sys.Date(), "%Y%m%d"),"/", match_date, "_", away_team, ".parquet", sep = "")
+    temp_away_file_path <- paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/player_data/", match_date, "_", away_team, ".csv", sep = "")
     
     away_table %>%
 
-      write_parquet(temp_away_file_path)
+      write_csv(temp_away_file_path)
     
 
     
@@ -119,10 +119,10 @@ scrape_rugby_pass_data1 <- function(urls) {
 
 
  
-    temp_team_file_path <- paste("3_raw_data/team_data/",format(Sys.Date(), "%Y%m%d"),"/", date_match, ".parquet", sep = "")
+    temp_team_file_path <- paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/", "team_data/", date_match, ".csv", sep = "")
 
     full_team_stats %>%
-      write_parquet(temp_team_file_path)
+      write_csv(temp_team_file_path)
     
     }, error = function(e){ skip_to_next <<- TRUE })
     

@@ -1,9 +1,3 @@
-library(miceadds)
-library(rvest)
-library(lubridate)
-library(tidyverse)
-source.all("functions")
-
 links <- c()
 # autumn nations
 autumn_nations <- "https://www.rugbypass.com/autumn-nations-cup/matches/"
@@ -30,7 +24,6 @@ links <- c(links, rugby_championship)
 internationals_2019 <- "https://www.rugbypass.com/internationals/matches/2019/"
 
 internationals_2019 <- get_rugby_pass_links(internationals_2019)
-
 links <- c(links, internationals_2019)
 internationals_2020 <- "https://www.rugbypass.com/internationals/matches/2020/"
 
@@ -63,7 +56,7 @@ links <- c(links, heineken)
 #challenge cup
 challenge_cup<- "https://www.rugbypass.com/challenge-cup/matches/2019-2020/"
 
-challenge_cup <- get_rugby_pass_links(challenge_cup)
+#challenge_cup <- get_rugby_pass_links(challenge_cup)
 links <- c(links, challenge_cup)
 
 #pro 14

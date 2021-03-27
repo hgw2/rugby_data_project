@@ -4,14 +4,14 @@ clean_team_data <- function() {
   
   for (file in list.files(paste(
     "~/rugby_data_project/3_raw_data/",
-    format(Sys.Date(), "%Y%m%d"),
+    date,
     "/team_data",
     sep = ""
   ))) {
     file_path <-
       paste(
         "~/rugby_data_project/3_raw_data/",
-        format(Sys.Date(), "%Y%m%d"),
+        date,
         "/team_data/",
         file,
         sep = ""
@@ -22,7 +22,7 @@ clean_team_data <- function() {
   complete_data <- NULL
   
   for (file in files) {
-    part_data <- read_parquet(file)
+    part_data <- read_csv(file, col_types = cols( date = "D", values = "d"))
     
     names <- part_data %>%
       select(-competition:-team) %>%
@@ -34,6 +34,7 @@ clean_team_data <- function() {
              .after = match) %>%
       ungroup() %>%
       pivot_longer(names, names_to = "stat", values_to = "values") %>%
+      mutate(values = as.double(values)) %>% 
       mutate(season = as.character(season)) %>%
       mutate(
         stat = recode(
@@ -101,7 +102,7 @@ clean_team_data <- function() {
   dir.create("~/rugby_data_project/5_clean_data")
   dir.create(paste(
     "~/rugby_data_project/5_clean_data/",
-    format(Sys.Date(), "%Y%m%d"),
+    date,
     sep = ""
   ))
   
@@ -109,9 +110,9 @@ clean_team_data <- function() {
     write_parquet(
       paste(
         "~/rugby_data_project/5_clean_data/",
-        format(Sys.Date(), "%Y%m%d"),
+        date,
         "/",
-        format(Sys.Date(), "%Y%m%d"),
+        date,
         "_team_data.parquet",
         sep = ""
       )
