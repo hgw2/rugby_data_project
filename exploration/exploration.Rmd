@@ -9,7 +9,19 @@ d <- read_parquet("../5_clean_data/20210321_player_data.parquet")
 
 team <- a %>% 
   anti_join(b, by = c("match", "season")) 
-team <- c %>% 
+player <- c %>% 
   anti_join(d, by = c("match", "season")) 
+```
+
+```{r}
+c <- read_csv("../backfill/team_matches_club_202103231348.csv", col_types = cols(season = "c"))
+i <- read_csv("../backfill/team_matches_international_202103231349.csv", col_types = cols(season = "c"))
+
+fin <- c %>% 
+  bind_rows(i)
+
+fin %>% 
+  distinct(match, date) %>% 
+  nrow(  )
 ```
 

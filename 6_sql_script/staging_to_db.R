@@ -13,29 +13,46 @@ db_connection = dbConnect(
 
 dbGetQuery(db_connection, statement = "
 INSERT INTO team_matches.international
-SELECT *
-FROM staging.team
-WHERE type_of_team = 'international';
+SELECT s.*
+FROM staging.team s
+WHERE s.type_of_team = 'international' AND NOT EXISTS(
+	SELECT *
+	FROM team_matches.international db
+	WHERE s.MATCH = db.match AND s.date=db.date 
+);
+
            ")
 dbGetQuery(db_connection, statement = "
 INSERT INTO team_matches.club
-SELECT *
-FROM staging.team
-WHERE type_of_team = 'club';
+SELECT s.*
+FROM staging.team s
+WHERE s.type_of_team = 'club' AND NOT EXISTS(
+	SELECT *
+	FROM team_matches.club db
+	WHERE s.MATCH = db.match AND s.date=db.date 
+);
            ")
 
 dbGetQuery(db_connection, statement = "
 INSERT INTO player_matches.international
-SELECT *
-FROM staging.player
-WHERE type_of_team = 'international';
+SELECT s.*
+FROM staging.player s
+WHERE s.type_of_team = 'international' AND NOT EXISTS(
+	SELECT *
+	FROM player_matches.international db
+	WHERE s.MATCH = db.match AND s.date=db.date 
+)
            ")
 
 dbGetQuery(db_connection, statement = "
 INSERT INTO player_matches.club
-SELECT *
-FROM staging.player
-WHERE type_of_team = 'club';
+SELECT s.*
+FROM staging.player s
+WHERE s.type_of_team = 'club' AND NOT EXISTS(
+	SELECT *
+	FROM player_matches.club db
+	WHERE s.MATCH = db.match AND s.date=db.date 
+)
            ")
 
 

@@ -2,9 +2,9 @@ scrape_rugby_pass_data1 <- function(urls) {
 
   # Create temp directory for overall stats
   dir.create("~/rugby_data_project/3_raw_data")
-  dir.create(paste("~/rugby_data_project/3_raw_data/", format(Sys.Date(), "%Y%m%d"), sep = ""))
-  dir.create(paste("~/rugby_data_project/3_raw_data/",format(Sys.Date(), "%Y%m%d"), "/player_data", sep = ""))
-  dir.create(paste("~/rugby_data_project/3_raw_data/",format(Sys.Date(), "%Y%m%d"), "/team_data", sep = ""))
+  dir.create(paste("~/rugby_data_project/3_raw_data/", date, sep = ""))
+  dir.create(paste("~/rugby_data_project/3_raw_data/",date, "/player_data", sep = ""))
+  dir.create(paste("~/rugby_data_project/3_raw_data/",date, "/team_data", sep = ""))
   for (webpage in urls) {
     
     skip_to_next <- FALSE
@@ -75,14 +75,14 @@ scrape_rugby_pass_data1 <- function(urls) {
     
 
   
-    temp_home_file_path <-paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/player_data/", match_date, "_", home_team,  ".csv", sep = "")
+    temp_home_file_path <-paste("3_raw_data/", date,"/player_data/", match_date, "_", home_team,  ".csv", sep = "")
     
     home_table %>%
       write_csv(temp_home_file_path)
     
     
   
-    temp_away_file_path <- paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/player_data/", match_date, "_", away_team, ".csv", sep = "")
+    temp_away_file_path <- paste("3_raw_data/", date,"/player_data/", match_date, "_", away_team, ".csv", sep = "")
     
     away_table %>%
 
@@ -119,7 +119,7 @@ scrape_rugby_pass_data1 <- function(urls) {
 
 
  
-    temp_team_file_path <- paste("3_raw_data/", format(Sys.Date(), "%Y%m%d"),"/", "team_data/", date_match, ".csv", sep = "")
+    temp_team_file_path <- paste("3_raw_data/", date,"/", "team_data/", date_match, ".csv", sep = "")
 
     full_team_stats %>%
       write_csv(temp_team_file_path)
